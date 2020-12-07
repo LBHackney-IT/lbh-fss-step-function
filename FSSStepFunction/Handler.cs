@@ -10,15 +10,25 @@ namespace AwsDotnetCsharp
             return $"Send Email {request.name}! I know you like {request.likes}";
         }
 
-        public string Wait1stMonth(Request request)
+        public Response Wait1stMonth(Request request)
         {
-            return $"Wait 1st Month {request.name}! Step1 {request.likes}";
+            return new Response
+            {
+                name = request.name,
+                likes = request.likes
+            };
         }
 
 
     }
 
     public class Request
+    {
+        public string name { get; set; }
+        public string likes { get; set; }
+    }
+
+    public class Response
     {
         public string name { get; set; }
         public string likes { get; set; }
