@@ -7,6 +7,15 @@ then
   apt -qq -y install zip
 fi
 
+#dotnet restore
+dotnet tool install --global Amazon.Lambda.Tools --version 4.0.0
+
+
+# (for CI) ensure that the newly-installed tools are on PATH
+if [ -f /etc/debian_version ]
+then
+  export PATH="$PATH:/$(whoami)/.dotnet/tools"
+fi
+
 dotnet restore
-dotnet tool install -g Amazon.Lambda.Tools --framework netcoreapp3.1
-dotnet lambda package --configuration Release --framework netcoreapp3.1 --output-package bin/Release/netcoreapp3.1/hello.zip
+dotnet lambda package --configuration release --framework netcoreapp3.1 --output-package ./bin/release/netcoreapp3.1/fss-step-functions.zip

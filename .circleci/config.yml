@@ -1,6 +1,7 @@
 version: 2.1
 
 orbs:
+  aws-ecr: circleci/aws-ecr@3.0.0
   aws-cli: circleci/aws-cli@0.1.9
   aws_assume_role: lbh-hackit/aws_assume_role@0.1.0
 
@@ -54,14 +55,15 @@ commands:
       - run:
           name: Build lambda
           command: |
-            cd ./LbhBaseStepFunction/
+            cd ./LbhFssStepFunction/
             chmod +x ./build.sh
             ./build.sh
       - run:
           name: Deploy lambda
           command: |
-            cd ./LbhBaseStepFunction/
-            sls deploy --stage <<parameters.stage>> --conceal
+            cd ./LbhFssStepFunction/
+            sls plugin install --name serverless-step-functions
+            sls deploy --stage <<parameters.stage>>
 
 jobs:
   check-code-formatting:
@@ -74,17 +76,17 @@ jobs:
       - run:
           name: Run formatter check
           command: ./dotnet-format-local/dotnet-format --dry-run --check
-#  build-and-test:
-#    executor: docker-python
-#    steps:
-#      - checkout
-#      - setup_remote_docker
-#      - run:
-#          name: build
-#          command: docker-compose build lbh-fss-portal-api-test
-#      - run:
-#          name: Run tests
-#          command: docker-compose run lbh-fss-portal-api-test
+  #  build-and-test:
+  #    executor: docker-python
+  #    steps:
+  #      - checkout
+  #      - setup_remote_docker
+  #      - run:
+  #          name: build
+  #          command: docker-compose build lbh-fss-portal-api-test
+  #      - run:
+  #          name: Run tests
+  #          command: docker-compose run lbh-fss-portal-api-test
   assume-role-development:
     executor: docker-python
     steps:
@@ -123,14 +125,14 @@ workflows:
         filters:
           branches:
             ignore: master
-#      - build-and-test:
-#        filters:
-#          branches:
-#            ignore: master
+      #      - build-and-test:
+      #        filters:
+      #          branches:
+      #            ignore: master
       - assume-role-development:
           context: api-assume-role-development-context
-#          requires:
-#            - build-and-test
+          #          requires:
+          #            - build-and-test
           filters:
             branches:
               ignore: master
@@ -142,14 +144,14 @@ workflows:
               ignore: master
   check-and-deploy-staging-and-production:
     jobs:
-      - build-and-test:
-          filters:
-            branches:
-              only: master
+      #      - build-and-test:
+      #          filters:
+      #            branches:
+      #              only: master
       - assume-role-staging:
           context: api-assume-role-staging-context
-#          requires:
-#            - build-and-test
+          #          requires:
+          #            - build-and-test
           filters:
             branches:
               only: master
