@@ -238,6 +238,7 @@ _Pvt_Extensions
 
 # macOS
 .DS_Store
+../.DS_Store
 
 # JetBrains Rider C# IDE
 .idea*
