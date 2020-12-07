@@ -55,14 +55,13 @@ commands:
       - run:
           name: Build lambda
           command: |
-            ls
-            cd ./FssStepFunction/
+            cd ./FSSStepFunction/
             chmod +x ./build.sh
             ./build.sh
       - run:
           name: Deploy lambda
           command: |
-            cd ./FssStepFunction/
+            cd ./FSSStepFunction/
             sls plugin install --name serverless-step-functions
             sls deploy --stage <<parameters.stage>>
 
