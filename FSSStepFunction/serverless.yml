@@ -14,8 +14,10 @@ package:
   artifact: ./bin/release/netcoreapp3.1/fss-step-functions.zip
 
 functions:
-  fssFunctions:
-    handler: CsharpHandlers::AwsDotnetCsharp.Handler
+  sendEmail1:
+    handler: CsharpHandlers::AwsDotnetCsharp.Handler::SendEmail1
+  wait1stMonth:
+    handler: CsharpHandlers::AwsDotnetCsharp.Handler::Wait1stMonth
 
 stepFunctions:
   stateMachines:
@@ -32,13 +34,13 @@ stepFunctions:
                 stage: ${self:provider.stage}
       name: fssStateMachine-${self:provider.stage}
       definition:
-        Comment: "A test step function deployed via serverless"
+        Comment: "An FSS step function deployed via serverless"
         StartAt: Send_email_1
         States:
           Send_email_1:
             Type: Task
             Resource:
-              Fn::GetAtt: [fssFunctions::SendEmail1, Arn]
+              Fn::GetAtt: [sendEmail1, Arn]
               input:
                 name: Selwyn
                 likes: Step Functions
@@ -46,7 +48,7 @@ stepFunctions:
           Wait_1st_month:
             Type: Task
             Resource:
-              Fn::GetAtt: [fssFunctions::Wait1stMonth, Arn]
+              Fn::GetAtt: [wait1stMonth, Arn]
               input:
                 name: Selwyn
                 likes: Step Functions
