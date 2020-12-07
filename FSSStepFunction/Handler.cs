@@ -5,9 +5,13 @@ namespace AwsDotnetCsharp
 {
     public class Handler
     {
-        public string SendEmail1(Request request)
+        public Response SendEmail1(Request request)
         {
-            return $"Send Email {request.name}! I know you like {request.likes}";
+            return new Response
+            {
+                name = request.name,
+                likes = request.likes
+            };
         }
 
         public Response Wait1stMonth(Request request)

@@ -30,6 +30,8 @@ stepFunctions:
             rate: rate(10 minutes)
             enabled: true
             input:
+              name: Selwyn
+              likes: Step Functions
               stageParams:
                 stage: ${self:provider.stage}
       name: fssStateMachine-${self:provider.stage}
