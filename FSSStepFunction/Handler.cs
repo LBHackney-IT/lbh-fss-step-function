@@ -5,10 +5,17 @@ namespace AwsDotnetCsharp
 {
     public class Handler
     {
-        public string FssFunctions(Request request)
+        public string SendEmail1(Request request)
         {
-            return $"Hello {request.name}! I know you like {request.likes}";
+            return $"Send Email {request.name}! I know you like {request.likes}";
         }
+
+        public string Wait1stMonth(Request request)
+        {
+            return $"Wait 1st Month {request.name}! Step1 {request.likes}";
+        }
+        
+        
     }
 
     public class Request

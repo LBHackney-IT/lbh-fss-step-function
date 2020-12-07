@@ -15,7 +15,7 @@ package:
 
 functions:
   fssFunctions:
-    handler: CsharpHandlers::AwsDotnetCsharp.Handler::FssFunctions
+    handler: CsharpHandlers::AwsDotnetCsharp.Handler
 
 stepFunctions:
   stateMachines:
@@ -38,12 +38,18 @@ stepFunctions:
           Send_email_1:
             Type: Task
             Resource:
-              Fn::GetAtt: [fssFunctions, Arn]
+              Fn::GetAtt: [fssFunctions::SendEmail1, Arn]
+              input:
+                name: Selwyn
+                likes: Step Functions
             Next: Wait_1st_month
           Wait_1st_month:
             Type: Task
             Resource:
-              Fn::GetAtt: [fssFunctions, Arn]
+              Fn::GetAtt: [fssFunctions::Wait1stMonth, Arn]
+              input:
+                name: Selwyn
+                likes: Step Functions
             Next: Check_org_1
           Check_org_1:
             Type: Task
