@@ -17,7 +17,6 @@ namespace LbhFssStepFunction.V1.Factories
                 OrganisationId = userOrganisationEntity.OrganisationId,
                 CreatedAt = userOrganisationEntity.CreatedAt,
                 User = userOrganisationEntity.User.ToDomain(),
-                Organisation = userOrganisationEntity.Organisation.ToDomain()
             };
         }
 

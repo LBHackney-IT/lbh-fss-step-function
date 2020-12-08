@@ -29,7 +29,7 @@ namespace LbhFssStepFunction.V1.Factories
                 return null;
             var orgResponse = new OrganisationResponse
             {
-                Id = organisationDomain.Id,
+                OrganisationId = organisationDomain.Id,
                 OrganisationName = organisationDomain.Name,
                 Status = organisationDomain.Status,
                 EmailAddresses = new List<string>()

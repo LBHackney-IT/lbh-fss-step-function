@@ -52,6 +52,7 @@ namespace LbhFssStepFunction.V1.Infrastructure
                 entity.Property(e => e.SubmittedAt).HasColumnName("submitted_at");
 
                 entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+                entity.HasMany(d => d.UserOrganisations);
             });
 
             modelBuilder.Entity<UserOrganisationEntity>(entity =>
@@ -73,16 +74,7 @@ namespace LbhFssStepFunction.V1.Infrastructure
                 entity.Property(e => e.OrganisationId).HasColumnName("organization_id");
 
                 entity.Property(e => e.UserId).HasColumnName("user_id");
-
-                entity.HasOne(d => d.Organisation)
-                    .WithMany(p => p.UserOrganisations)
-                    .HasForeignKey(d => d.OrganisationId)
-                    .HasConstraintName("user_organizations_organization_id_fkey");
-
-                entity.HasOne(d => d.User)
-                    .WithMany(p => p.UserOrganisations)
-                    .HasForeignKey(d => d.UserId)
-                    .HasConstraintName("user_organizations_user_id_fkey");
+                entity.HasOne(d => d.User);
             });
 
             modelBuilder.Entity<UserEntity>(entity =>
