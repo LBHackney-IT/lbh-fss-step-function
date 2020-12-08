@@ -8,20 +8,21 @@ namespace LbhFssStepFunction
 {
     public class Handler
     {
-        private readonly IGetOrganisationUseCase _getOrganisationUseCase;
+        private readonly IFirstStepUseCase _firstStepUseCase;
+        private readonly ISecondStepUseCase _secondStepUseCase;
 
         public Handler()
         {
-            _getOrganisationUseCase = new GetOrganisationUseCase();
+            _firstStepUseCase = new FirstStepUseCase();
         }
         public OrganisationResponse SendEmail1(Request request)
         {
-            return _getOrganisationUseCase.GetOrganisation(request.organisationId);
+            return _firstStepUseCase.GetOrganisationAndSendEmail(request.organisationId);
         }
 
         public OrganisationResponse Wait1stMonth(Request request)
         {
-            return _getOrganisationUseCase.GetOrganisation(request.organisationId);
+            return _secondStepUseCase.GetOrganisationAndSendEmail(request.organisationId);
         }
 
 

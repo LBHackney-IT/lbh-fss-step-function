@@ -11,6 +11,7 @@ provider:
   environment:
     CONNECTION_STRING: Host=${ssm:/fss-public-api/${self:provider.stage}/postgres-hostname};Port=${ssm:/fss-public-api/${self:provider.stage}/postgres-port};Database=${ssm:/fss-public-api/${self:provider.stage}/postgres-database};Username=${ssm:/fss-public-api/${self:provider.stage}/postgres-username};Password=${ssm:/fss-public-api/${self:provider.stage}/postgres-password}
     NOTIFY_KEY: ${ssm:/fss-portal-api/${self:provider.stage}/notify-key}
+    REVERIFICATION_FIRST_EMAIL_TEMPLATE: ${ssm:/fss-common/${self:provider.stage}/reverification-first-email-template}
 
 package:
   # individually: true
