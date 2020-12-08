@@ -16,7 +16,7 @@ namespace LbhFssStepFunction.V1.UseCase
         }
         public OrganisationResponse GetOrganisationAndSendEmail(int id)
         {
-            LoggingHandler.LogInfo("Executing request to gateway to get organisation");
+            LoggingHandler.LogInfo("Second step executing request to gateway to get organisation");
             var organisation = _organisationsGateway.GetOrganisationById(id).ToResponse();
             return organisation;
         }

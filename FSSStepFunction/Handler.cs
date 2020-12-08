@@ -14,6 +14,7 @@ namespace LbhFssStepFunction
         public Handler()
         {
             _firstStepUseCase = new FirstStepUseCase();
+            _secondStepUseCase = new SecondStepUseCase();
         }
         public OrganisationResponse SendEmail1(Request request)
         {
