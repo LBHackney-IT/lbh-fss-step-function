@@ -17,7 +17,7 @@ namespace LbhFssStepFunction.V1.Gateways
         public OrganisationsGateway()
         {
             var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
-            LoggingHandler.LogInfo($"Connection string: {connectionString.Substring(0,10)}...");
+            LoggingHandler.LogInfo($"Connection string: {connectionString.Substring(0, 10)}...");
             var optionsBuilder = new DbContextOptionsBuilder();
             optionsBuilder.UseNpgsql(connectionString);
             _context = new DatabaseContext(optionsBuilder.Options);
