@@ -8,6 +8,8 @@ namespace LbhFssStepFunction.V1.Factories
     {
         public static OrganisationDomain ToDomain(this OrganisationEntity organisationEntity)
         {
+            if (organisationEntity == null)
+                return null;
             return new OrganisationDomain
             {
                 Id = organisationEntity.Id,
