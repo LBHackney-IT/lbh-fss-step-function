@@ -36,7 +36,7 @@ namespace LbhFssStepFunction.V1.Infrastructure
                 entity.Property(e => e.Id)
                     .HasColumnName("id")
                     .UseIdentityAlwaysColumn();
-                
+
                 entity.Property(e => e.CreatedAt).HasColumnName("created_at");
 
                 entity.Property(e => e.Name)
@@ -44,7 +44,7 @@ namespace LbhFssStepFunction.V1.Infrastructure
                     .HasColumnType("character varying");
 
                 entity.Property(e => e.ReviewedAt).HasColumnName("reviewed_at");
-                
+
                 entity.Property(e => e.Status)
                     .HasColumnName("status")
                     .HasColumnType("character varying");
