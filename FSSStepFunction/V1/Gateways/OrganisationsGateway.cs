@@ -17,6 +17,7 @@ namespace LbhFssStepFunction.V1.Gateways
         public OrganisationsGateway()
         {
             var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+            LoggingHandler.LogInfo($"Connection string: {connectionString.Substring(0,10)}...");
             var optionsBuilder = new DbContextOptionsBuilder();
             optionsBuilder.UseNpgsql(connectionString);
             _context = new DatabaseContext(optionsBuilder.Options);
@@ -27,6 +28,7 @@ namespace LbhFssStepFunction.V1.Gateways
         {
             try
             {
+                LoggingHandler.LogInfo("Initiating database query");
                 var organisation = _context.Organisations
                     .Include(o => o.UserOrganisations)
                     .ThenInclude(uo => uo.User)
