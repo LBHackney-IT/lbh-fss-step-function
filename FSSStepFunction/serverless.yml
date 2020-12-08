@@ -8,15 +8,15 @@ provider:
   vpc: ${self:custom.vpc.development}
   stage: development
   region: eu-west-2
+  environment:
+    CONNECTION_STRING: Host=${ssm:/fss-public-api/${self:provider.stage}/postgres-hostname};Port=${ssm:/fss-public-api/${self:provider.stage}/postgres-port};Database=${ssm:/fss-public-api/${self:provider.stage}/postgres-database};Username=${ssm:/fss-public-api/${self:provider.stage}/postgres-username};Password=${ssm:/fss-public-api/${self:provider.stage}/postgres-password}
+    NOTIFY_KEY: ${ssm:/fss-portal-api/${self:provider.stage}/notify-key}
 
 package:
   # individually: true
   artifact: ./bin/release/netcoreapp3.1/fss-step-functions.zip
 
 functions:
-  environment:
-    CONNECTION_STRING: Host=${ssm:/fss-public-api/${self:provider.stage}/postgres-hostname};Port=${ssm:/fss-public-api/${self:provider.stage}/postgres-port};Database=${ssm:/fss-public-api/${self:provider.stage}/postgres-database};Username=${ssm:/fss-public-api/${self:provider.stage}/postgres-username};Password=${ssm:/fss-public-api/${self:provider.stage}/postgres-password}
-    NOTIFY_KEY: ${ssm:/fss-portal-api/${self:provider.stage}/notify-key}
   sendEmail1:
     handler: CsharpHandlers::LbhFssStepFunction.Handler::SendEmail1
   wait1stMonth:
