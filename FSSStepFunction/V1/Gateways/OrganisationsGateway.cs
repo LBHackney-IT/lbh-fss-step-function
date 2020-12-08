@@ -30,8 +30,8 @@ namespace LbhFssStepFunction.V1.Gateways
             {
                 LoggingHandler.LogInfo($"Initiating database query for organisation with id {id}");
                 var organisation = _context.Organisations
-                    //.Include(o => o.UserOrganisations)
-                    //.ThenInclude(uo => uo.User)
+                    .Include(o => o.UserOrganisations)
+                    .ThenInclude(uo => uo.User)
                     .FirstOrDefault(o => o.Id == id);
                 return organisation.ToDomain();
             }
