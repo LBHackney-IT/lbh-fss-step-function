@@ -55,62 +55,62 @@ stepFunctions:
           Check_org_1:
             Type: Task
             Resource:
-              Fn::GetAtt: [ sendEmail1, Arn ]
+              Fn::GetAtt: [ wait1stMonth, Arn ]
             Next: Has_org_been_reverified
           Has_org_been_reverified:
             Type: Task
             Resource:
-              Fn::GetAtt: [ sendEmail1, Arn ]
+              Fn::GetAtt: [ wait1stMonth, Arn ]
             Next: Send_email_2
           Send_email_2:
             Type: Task
             Resource:
-              Fn::GetAtt: [ sendEmail1, Arn ]
+              Fn::GetAtt: [ wait1stMonth, Arn ]
             Next: Wait_2nd_month
           Wait_2nd_month:
             Type: Task
             Resource:
-              Fn::GetAtt: [ sendEmail1, Arn ]
+              Fn::GetAtt: [ wait1stMonth, Arn ]
             Next: Check_org_2
           Check_org_2:
             Type: Task
             Resource:
-              Fn::GetAtt: [ sendEmail1, Arn ]
+              Fn::GetAtt: [ wait1stMonth, Arn ]
             Next: Has_org_been_reverified2
           Has_org_been_reverified2:
             Type: Task
             Resource:
-              Fn::GetAtt: [ sendEmail1, Arn ]
+              Fn::GetAtt: [ wait1stMonth, Arn ]
             Next: Send_email_3
           Send_email_3:
             Type: Task
             Resource:
-              Fn::GetAtt: [ sendEmail1, Arn ]
+              Fn::GetAtt: [ wait1stMonth, Arn ]
             Next: Wait_3rd_month
           Wait_3rd_month:
             Type: Task
             Resource:
-              Fn::GetAtt: [ sendEmail1, Arn ]
+              Fn::GetAtt: [ wait1stMonth, Arn ]
             Next: Check_org_3
           Check_org_3:
             Type: Task
             Resource:
-              Fn::GetAtt: [ sendEmail1, Arn ]
+              Fn::GetAtt: [ wait1stMonth, Arn ]
             Next: Has_org_been_reverified3
           Has_org_been_reverified3:
             Type: Task
             Resource:
-              Fn::GetAtt: [ sendEmail1, Arn ]
+              Fn::GetAtt: [ wait1stMonth, Arn ]
             Next: Set_org_paused
           Set_org_paused:
             Type: Task
             Resource:
-              Fn::GetAtt: [ sendEmail1, Arn ]
+              Fn::GetAtt: [ wait1stMonth, Arn ]
             Next: Send_pause_email
           Send_pause_email:
             Type: Task
             Resource:
-              Fn::GetAtt: [ sendEmail1, Arn ]
+              Fn::GetAtt: [ wait1stMonth, Arn ]
             End: true
       dependsOn: lambdaExecutionRole
       tags:
