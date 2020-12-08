@@ -30,7 +30,7 @@ stepFunctions:
             path: gofunction
             method: GET
         - schedule:
-            rate: rate(10 minutes)
+            rate: rate(60 minutes)
             enabled: true
             input:
               organisationId: 3
