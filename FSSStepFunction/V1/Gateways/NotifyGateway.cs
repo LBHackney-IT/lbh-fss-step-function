@@ -19,6 +19,7 @@ namespace LbhFssStepFunction.V1.Gateways
         }
         public async Task SendFirstEmail(string[] addresses)
         {
+            LoggingHandler.LogInfo($"Sending first email to {addresses}");
             try
             {
                 for (int a = 0; a < addresses.Length; a++)
