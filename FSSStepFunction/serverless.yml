@@ -14,10 +14,13 @@ package:
   artifact: ./bin/release/netcoreapp3.1/fss-step-functions.zip
 
 functions:
+  environment:
+    CONNECTION_STRING: Host=${ssm:/fss-public-api/${self:provider.stage}/postgres-hostname};Port=${ssm:/fss-public-api/${self:provider.stage}/postgres-port};Database=${ssm:/fss-public-api/${self:provider.stage}/postgres-database};Username=${ssm:/fss-public-api/${self:provider.stage}/postgres-username};Password=${ssm:/fss-public-api/${self:provider.stage}/postgres-password}
+    NOTIFY_KEY: ${ssm:/fss-portal-api/${self:provider.stage}/notify-key}
   sendEmail1:
-    handler: CsharpHandlers::AwsDotnetCsharp.Handler::SendEmail1
+    handler: CsharpHandlers::LbhFssStepFunction.Handler::SendEmail1
   wait1stMonth:
-    handler: CsharpHandlers::AwsDotnetCsharp.Handler::Wait1stMonth
+    handler: CsharpHandlers::LbhFssStepFunction.Handler::Wait1stMonth
 
 stepFunctions:
   stateMachines:
@@ -30,8 +33,7 @@ stepFunctions:
             rate: rate(10 minutes)
             enabled: true
             input:
-              name: Selwyn
-              likes: Step Functions
+              organisationId: 3
               stageParams:
                 stage: ${self:provider.stage}
       name: fssStateMachine-${self:provider.stage}
@@ -43,17 +45,11 @@ stepFunctions:
             Type: Task
             Resource:
               Fn::GetAtt: [ sendEmail1, Arn ]
-              input:
-                name: Selwyn
-                likes: Step Functions
             Next: Wait_1st_month
           Wait_1st_month:
             Type: Task
             Resource:
               Fn::GetAtt: [ wait1stMonth, Arn ]
-              input:
-                name: Selwyn
-                likes: Step Functions
             Next: Check_org_1
           Check_org_1:
             Type: Task

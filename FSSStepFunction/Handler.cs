@@ -1,26 +1,27 @@
 using Amazon.Lambda.Core;
+using LbhFssStepFunction.V1;
+using LbhFssStepFunction.V1.UseCase;
+using LbhFssStepFunction.V1.UseCase.Interface;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
-namespace AwsDotnetCsharp
+namespace LbhFssStepFunction
 {
     public class Handler
     {
-        public Response SendEmail1(Request request)
+        private readonly IGetOrganisationUseCase _getOrganisationUseCase;
+
+        public Handler()
         {
-            return new Response
-            {
-                name = request.name,
-                likes = request.likes
-            };
+            _getOrganisationUseCase = new GetOrganisationUseCase();
+        }
+        public OrganisationResponse SendEmail1(Request request)
+        {
+            return _getOrganisationUseCase.GetOrganisation(request.organisationId);
         }
 
-        public Response Wait1stMonth(Request request)
+        public OrganisationResponse Wait1stMonth(Request request)
         {
-            return new Response
-            {
-                name = request.name,
-                likes = request.likes
-            };
+            return _getOrganisationUseCase.GetOrganisation(request.organisationId);
         }
 
 
@@ -28,13 +29,6 @@ namespace AwsDotnetCsharp
 
     public class Request
     {
-        public string name { get; set; }
-        public string likes { get; set; }
-    }
-
-    public class Response
-    {
-        public string name { get; set; }
-        public string likes { get; set; }
+        public int organisationId { get; set; }
     }
 }
