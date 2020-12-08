@@ -2,7 +2,7 @@ service: fssstepfunction
 provider:
   name: aws
   runtime: dotnetcore3.1
-  timeout: 15
+  timeout: 25
   #vpc: ${self:custom.vpc.${opt:stage}}
   #stage: ${opt:stage}
   vpc: ${self:custom.vpc.development}
