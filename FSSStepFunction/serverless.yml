@@ -32,7 +32,7 @@ stepFunctions:
             method: GET
         - schedule:
             rate: rate(60 minutes)
-            enabled: true
+            enabled: false
             input:
               organisationId: 3
               stageParams:
