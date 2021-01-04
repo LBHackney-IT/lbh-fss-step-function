@@ -38,8 +38,6 @@ namespace LbhFssStepFunction
             return _pauseStepUseCase.GetOrganisationAndSendEmail(request.organisationId);
         }
 
-
-
     }
 
     public class Request
