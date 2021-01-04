@@ -22,7 +22,7 @@ namespace LbhFssStepFunction.V1.UseCase
             var organisation = _organisationsGateway.GetOrganisationById(id).ToResponse();
             if (organisation == null)
                 return null;
-            _notifyGateway.SendFirstEmail(organisation.EmailAddresses.ToArray());
+            _notifyGateway.SendNotificationEmail(organisation.EmailAddresses.ToArray(), 1);
             return organisation;
         }
     }
