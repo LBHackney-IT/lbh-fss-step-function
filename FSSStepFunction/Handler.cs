@@ -27,7 +27,7 @@ namespace LbhFssStepFunction
         {
             return _secondStepUseCase.GetOrganisationAndSendEmail(request.organisationId);
         }
-        
+
         public OrganisationResponse ThirdStep(Request request)
         {
             return _thirdStepUseCase.GetOrganisationAndSendEmail(request.organisationId);
