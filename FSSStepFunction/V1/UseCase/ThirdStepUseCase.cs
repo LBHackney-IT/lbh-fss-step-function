@@ -23,6 +23,7 @@ namespace LbhFssStepFunction.V1.UseCase
             if (organisation == null)
                 return null;
             _notifyGateway.SendNotificationEmail(organisation.EmailAddresses.ToArray(), 3);
+            organisation.StateResult = 1;
             return organisation;
         }
     }
