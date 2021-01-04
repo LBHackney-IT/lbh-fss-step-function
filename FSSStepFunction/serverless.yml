@@ -12,16 +12,23 @@ provider:
     CONNECTION_STRING: Host=${ssm:/fss-public-api/${self:provider.stage}/postgres-hostname};Port=${ssm:/fss-public-api/${self:provider.stage}/postgres-port};Database=${ssm:/fss-public-api/${self:provider.stage}/postgres-database};Username=${ssm:/fss-public-api/${self:provider.stage}/postgres-username};Password=${ssm:/fss-public-api/${self:provider.stage}/postgres-password}
     NOTIFY_KEY: ${ssm:/fss-portal-api/${self:provider.stage}/notify-key}
     REVERIFICATION_FIRST_EMAIL_TEMPLATE: ${ssm:/fss-common/${self:provider.stage}/reverification-first-email-template}
+    REVERIFICATION_SECOND_EMAIL_TEMPLATE: ${ssm:/fss-common/${self:provider.stage}/reverification-second-email-template}
+    REVERIFICATION_THIRD_EMAIL_TEMPLATE: ${ssm:/fss-common/${self:provider.stage}/reverification-third-email-template}
+    REVERIFICATION_PAUSE_EMAIL_TEMPLATE: ${ssm:/fss-common/${self:provider.stage}/reverification-pause-email-template}
 
 package:
   # individually: true
   artifact: ./bin/release/netcoreapp3.1/fss-step-functions.zip
 
 functions:
-  sendEmail1:
-    handler: CsharpHandlers::LbhFssStepFunction.Handler::SendEmail1
-  wait1stMonth:
-    handler: CsharpHandlers::LbhFssStepFunction.Handler::Wait1stMonth
+  firstStep:
+    handler: CsharpHandlers::LbhFssStepFunction.Handler::FirstStep
+  secondStep:
+    handler: CsharpHandlers::LbhFssStepFunction.Handler::SecondStep
+  thirdStep:
+    handler: CsharpHandlers::LbhFssStepFunction.Handler::ThirdStep
+  pauseStep:
+    handler: CsharpHandlers::LbhFssStepFunction.Handler::PauseStep
 
 stepFunctions:
   stateMachines:
@@ -31,7 +38,7 @@ stepFunctions:
             path: gofunction
             method: GET
         - schedule:
-            rate: rate(60 minutes)
+            rate: rate(24 hours)
             enabled: false
             input:
               organisationId: 3
@@ -40,77 +47,68 @@ stepFunctions:
       name: fssStateMachine-${self:provider.stage}
       definition:
         Comment: "An FSS step function deployed via serverless"
-        StartAt: Send_email_1
+        StartAt: First_Step
         States:
-          Send_email_1:
+          First_Step:
             Type: Task
             Resource:
-              Fn::GetAtt: [ sendEmail1, Arn ]
-            Next: Wait_1st_month
-          Wait_1st_month:
+              Fn::GetAtt: [ firstStep, Arn ]
+            Next: Wait_1
+          Wait_1:
+            Type: Wait
+            Seconds: 20
+            Next: Choice_1
+          Choice_1:
+            Type: Choice
+            Choices:
+              - Variable: $.var
+                NumericEquals: 0
+                Next: Second_Step
+              - Variable: $.var
+                NumericEquals: 1
+                Next: End_Step
+          Second_Step:
             Type: Task
             Resource:
-              Fn::GetAtt: [ wait1stMonth, Arn ]
-            Next: Check_org_1
-          Check_org_1:
+              Fn::GetAtt: [ secondStep, Arn ]
+            Next: Wait_2
+          Wait_2:
+            Type: Wait
+            Seconds: 20
+            Next: Choice_2
+          Choice_2:
+            Type: Choice
+            Choices:
+              - Variable: $.var
+                NumericEquals: 0
+                Next: Third_Step
+              - Variable: $.var
+                NumericEquals: 1
+                Next: End_Step
+          Third_Step:
             Type: Task
             Resource:
-              Fn::GetAtt: [ wait1stMonth, Arn ]
-            Next: Has_org_been_reverified
-          Has_org_been_reverified:
+              Fn::GetAtt: [ thirdStep, Arn ]
+            Next: Wait_3
+          Wait_3:
+            Type: Wait
+            Seconds: 20
+            Next: Choice_3
+          Choice_3:
+            Type: Choice
+            Choices:
+              - Variable: $.var
+                NumericEquals: 0
+                Next: Pause_Step
+              - Variable: $.var
+                NumericEquals: 1
+                Next: End_Step
+          Pause_Step:
             Type: Task
             Resource:
-              Fn::GetAtt: [ wait1stMonth, Arn ]
-            Next: Send_email_2
-          Send_email_2:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ wait1stMonth, Arn ]
-            Next: Wait_2nd_month
-          Wait_2nd_month:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ wait1stMonth, Arn ]
-            Next: Check_org_2
-          Check_org_2:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ wait1stMonth, Arn ]
-            Next: Has_org_been_reverified2
-          Has_org_been_reverified2:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ wait1stMonth, Arn ]
-            Next: Send_email_3
-          Send_email_3:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ wait1stMonth, Arn ]
-            Next: Wait_3rd_month
-          Wait_3rd_month:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ wait1stMonth, Arn ]
-            Next: Check_org_3
-          Check_org_3:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ wait1stMonth, Arn ]
-            Next: Has_org_been_reverified3
-          Has_org_been_reverified3:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ wait1stMonth, Arn ]
-            Next: Set_org_paused
-          Set_org_paused:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ wait1stMonth, Arn ]
-            Next: Send_pause_email
-          Send_pause_email:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ wait1stMonth, Arn ]
+              Fn::GetAtt: [ pauseStep, Arn ]
+            Next: End_Step
+          End_Step:
             End: true
       dependsOn: lambdaExecutionRole
       tags:
