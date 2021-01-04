@@ -10,21 +10,34 @@ namespace LbhFssStepFunction
     {
         private readonly IFirstStepUseCase _firstStepUseCase;
         private readonly ISecondStepUseCase _secondStepUseCase;
+        private readonly IThirdStepUseCase _thirdStepUseCase;
+        private readonly IPauseStepUseCase _pauseStepUseCase;
 
         public Handler()
         {
             _firstStepUseCase = new FirstStepUseCase();
             _secondStepUseCase = new SecondStepUseCase();
         }
-        public OrganisationResponse SendEmail1(Request request)
+        public OrganisationResponse FirstStep(Request request)
         {
             return _firstStepUseCase.GetOrganisationAndSendEmail(request.organisationId);
         }
 
-        public OrganisationResponse Wait1stMonth(Request request)
+        public OrganisationResponse SecondStep(Request request)
         {
             return _secondStepUseCase.GetOrganisationAndSendEmail(request.organisationId);
         }
+        
+        public OrganisationResponse ThirdStep(Request request)
+        {
+            return _thirdStepUseCase.GetOrganisationAndSendEmail(request.organisationId);
+        }
+
+        public OrganisationResponse PauseStep(Request request)
+        {
+            return _pauseStepUseCase.GetOrganisationAndSendEmail(request.organisationId);
+        }
+
 
 
     }
