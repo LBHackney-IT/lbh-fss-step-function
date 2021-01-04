@@ -64,7 +64,7 @@ stepFunctions:
               - Variable: $.StateResult
                 NumericEquals: 0
                 Next: Second_Step
-              - Variable: $.var
+              - Variable: $.StateResult
                 NumericEquals: 1
                 Next: End_Step
           Second_Step:
@@ -79,10 +79,10 @@ stepFunctions:
           Choice_2:
             Type: Choice
             Choices:
-              - Variable: $.var
+              - Variable: $.StateResult
                 NumericEquals: 0
                 Next: Third_Step
-              - Variable: $.var
+              - Variable: $.StateResult
                 NumericEquals: 1
                 Next: End_Step
           Third_Step:
@@ -97,10 +97,10 @@ stepFunctions:
           Choice_3:
             Type: Choice
             Choices:
-              - Variable: $.var
+              - Variable: $.StateResult
                 NumericEquals: 0
                 Next: Pause_Step
-              - Variable: $.var
+              - Variable: $.StateResult
                 NumericEquals: 1
                 Next: End_Step
           Pause_Step:
