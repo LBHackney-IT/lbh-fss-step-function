@@ -39,12 +39,13 @@ namespace LbhFssStepFunction.V1.Gateways
                     notifyTemplate = _reverificationPauseEmailTemplate;
                     break;
             }
-            LoggingHandler.LogInfo($"Sending email to {addresses[0]}");
+            LoggingHandler.LogInfo($"Sending email to organisation contacts.");
             try
             {
                 for (int a = 0; a < addresses.Length; a++)
                 {
                     await _client.SendEmailAsync(addresses[a], notifyTemplate).ConfigureAwait(false);
+                    LoggingHandler.LogInfo($"Successfully sent email to {addresses[a]}");
                 }
             }
             catch (NotifyClientException e)
