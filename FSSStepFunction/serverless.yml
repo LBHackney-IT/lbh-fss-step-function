@@ -109,6 +109,7 @@ stepFunctions:
               Fn::GetAtt: [ pauseStep, Arn ]
             Next: End_Step
           End_Step:
+            Type: Succeed
             End: true
       dependsOn: lambdaExecutionRole
       tags:
