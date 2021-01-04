@@ -110,7 +110,6 @@ stepFunctions:
             Next: End_Step
           End_Step:
             Type: Succeed
-            End: true
       dependsOn: lambdaExecutionRole
       tags:
         Team: HackIt
