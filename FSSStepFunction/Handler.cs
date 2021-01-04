@@ -17,6 +17,8 @@ namespace LbhFssStepFunction
         {
             _firstStepUseCase = new FirstStepUseCase();
             _secondStepUseCase = new SecondStepUseCase();
+            _thirdStepUseCase = new ThirdStepUseCase();
+            _pauseStepUseCase = new PauseStepUseCase();
         }
         public OrganisationResponse FirstStep(Request request)
         {
