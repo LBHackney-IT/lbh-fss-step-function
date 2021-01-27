@@ -2,7 +2,7 @@ service: fssstepfunction
 provider:
   name: aws
   runtime: dotnetcore3.1
-  timeout: 25
+  timeout: 30
   #vpc: ${self:custom.vpc.${opt:stage}}
   #stage: ${opt:stage}
   vpc: ${self:custom.vpc.development}
@@ -11,16 +11,28 @@ provider:
   environment:
     CONNECTION_STRING: Host=${ssm:/fss-public-api/${self:provider.stage}/postgres-hostname};Port=${ssm:/fss-public-api/${self:provider.stage}/postgres-port};Database=${ssm:/fss-public-api/${self:provider.stage}/postgres-database};Username=${ssm:/fss-public-api/${self:provider.stage}/postgres-username};Password=${ssm:/fss-public-api/${self:provider.stage}/postgres-password}
     NOTIFY_KEY: ${ssm:/fss-portal-api/${self:provider.stage}/notify-key}
+    ACCESS_ID: ${ssm:/fss-portal-api/${self:provider.stage}/cognito-user}
+    ACCESS_KEY: ${ssm:/fss-portal-api/${self:provider.stage}/cognito-key}
     REVERIFICATION_FIRST_EMAIL_TEMPLATE: ${ssm:/fss-common/${self:provider.stage}/reverification-first-email-template}
     REVERIFICATION_SECOND_EMAIL_TEMPLATE: ${ssm:/fss-common/${self:provider.stage}/reverification-second-email-template}
     REVERIFICATION_THIRD_EMAIL_TEMPLATE: ${ssm:/fss-common/${self:provider.stage}/reverification-third-email-template}
     REVERIFICATION_PAUSE_EMAIL_TEMPLATE: ${ssm:/fss-common/${self:provider.stage}/reverification-pause-email-template}
+    WAIT_DURATION: ${ssm:/fss-step-function/${self:provider.stage}/wait-duration}
 
 package:
   # individually: true
   artifact: ./bin/release/netcoreapp3.1/fss-step-functions.zip
 
 functions:
+  startFunction:
+    description: "The scheduler to check for FSS org reviews and trigger step functions.  Runs every 10 minutes"
+    handler: CsharpHandlers::LbhFssStepFunction.Handler::StartFunction
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+    environment:
+      FSS_STEP_FUNCTION_ARN: ${self:resources.Outputs.FssStateMachine.Value}
+
   firstStep:
     handler: CsharpHandlers::LbhFssStepFunction.Handler::FirstStep
   secondStep:
@@ -29,22 +41,12 @@ functions:
     handler: CsharpHandlers::LbhFssStepFunction.Handler::ThirdStep
   pauseStep:
     handler: CsharpHandlers::LbhFssStepFunction.Handler::PauseStep
+    
 
 stepFunctions:
   stateMachines:
     fssstepfunc1:
-      events:
-        - http:
-            path: gofunction
-            method: GET
-        - schedule:
-            rate: rate(24 hours)
-            enabled: false
-            input:
-              organisationId: 3
-              stageParams:
-                stage: ${self:provider.stage}
-      name: fssStateMachine-${self:provider.stage}
+      name: fssStateMachine
       definition:
         Comment: "An FSS step function deployed via serverless"
         StartAt: First_Step
@@ -53,60 +55,84 @@ stepFunctions:
             Type: Task
             Resource:
               Fn::GetAtt: [ firstStep, Arn ]
+            Retry:
+              - ErrorEquals:
+                  - States.All
+                IntervalSeconds: 30
+                MaxAttempts: 3
+                BackoffRate: 2
             Next: Wait_1
           Wait_1:
             Type: Wait
-            Seconds: 20
+            TimestampPath: $.NextStepTime
             Next: Choice_1
           Choice_1:
             Type: Choice
             Choices:
               - Variable: $.StateResult
-                NumericEquals: 0
+                BooleanEquals: true
                 Next: Second_Step
               - Variable: $.StateResult
-                NumericEquals: 1
+                BooleanEquals: false
                 Next: End_Step
           Second_Step:
             Type: Task
             Resource:
               Fn::GetAtt: [ secondStep, Arn ]
+            Retry:
+              - ErrorEquals:
+                  - States.All
+                IntervalSeconds: 30
+                MaxAttempts: 3
+                BackoffRate: 2
             Next: Wait_2
           Wait_2:
             Type: Wait
-            Seconds: 20
+            TimestampPath: $.NextStepTime
             Next: Choice_2
           Choice_2:
             Type: Choice
             Choices:
               - Variable: $.StateResult
-                NumericEquals: 0
+                BooleanEquals: true
                 Next: Third_Step
               - Variable: $.StateResult
-                NumericEquals: 1
+                BooleanEquals: false
                 Next: End_Step
           Third_Step:
             Type: Task
             Resource:
               Fn::GetAtt: [ thirdStep, Arn ]
+            Retry:
+              - ErrorEquals:
+                  - States.All
+                IntervalSeconds: 30
+                MaxAttempts: 3
+                BackoffRate: 2
             Next: Wait_3
           Wait_3:
             Type: Wait
-            Seconds: 20
+            TimestampPath: $.NextStepTime
             Next: Choice_3
           Choice_3:
             Type: Choice
             Choices:
               - Variable: $.StateResult
-                NumericEquals: 0
+                BooleanEquals: true
                 Next: Pause_Step
               - Variable: $.StateResult
-                NumericEquals: 1
+                BooleanEquals: false
                 Next: End_Step
           Pause_Step:
             Type: Task
             Resource:
               Fn::GetAtt: [ pauseStep, Arn ]
+            Retry:
+              - ErrorEquals:
+                  - States.All
+                IntervalSeconds: 30
+                MaxAttempts: 3
+                BackoffRate: 2
             Next: End_Step
           End_Step:
             Type: Succeed
@@ -115,6 +141,12 @@ stepFunctions:
         Team: HackIt
 
 resources:
+  Outputs:
+    FssStateMachine:
+      Description:  The ARN of the FSS state machine
+      Value:
+        Ref: FssStateMachine
+      
   Resources:
     lambdaExecutionRole:
       Type: AWS::IAM::Role
