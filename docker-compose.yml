@@ -1,0 +1,25 @@
+version: "3.2"
+
+services:
+  lbh-fss-step-function-test:
+    image: lbh-fss-step-function-test
+    build:
+      context: .
+      dockerfile: LbhFssStepFunction.Tests/Dockerfile
+    environment:
+      - DB_HOST=test-database
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=mypassword
+      - DB_DATABASE=testdb
+#    links:
+#      - test-database
+  test-database:
+    image: test-database
+    build:
+      context: .
+      dockerfile: database/Dockerfile
+    ports:
+      - 5431:5432
+    env_file:
+      - database.env
