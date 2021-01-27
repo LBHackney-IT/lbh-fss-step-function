@@ -10,19 +10,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LbhFssStepFunction.V1.Gateways
 {
-    public class OrganisationsGateway : IOrganisationGateway
+    public class OrganisationsGateway : IOrganisationsGateway
     {
         private readonly DatabaseContext _context;
 
-        public OrganisationsGateway()
+        public OrganisationsGateway(string connectionString = null)
         {
-            var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
-            LoggingHandler.LogInfo($"Connection string: {connectionString.Substring(0, 10)}...");
+            var _connectionString = connectionString ?? Environment.GetEnvironmentVariable("CONNECTION_STRING");
             var optionsBuilder = new DbContextOptionsBuilder();
-            optionsBuilder.UseNpgsql(connectionString);
+            optionsBuilder.UseNpgsql(_connectionString);
             _context = new DatabaseContext(optionsBuilder.Options);
         }
-
 
         public OrganisationDomain GetOrganisationById(int id)
         {
@@ -41,6 +39,26 @@ namespace LbhFssStepFunction.V1.Gateways
                 LoggingHandler.LogError(e.StackTrace);
                 throw;
             }
+        }
+
+        public List<OrganisationDomain> GetOrganisationsToReview()
+        {
+            var orgsToReview = _context.Organisations
+                .Where(x => x.LastRevalidation < DateTime.Today.AddDays(-365))
+                .Where(x => x.InRevalidationProcess == false)
+                .Where(x => x.Status.ToLower() == "published")
+                .Select(org => org.ToDomain()).ToList();
+            return orgsToReview;
+        }
+
+        public OrganisationDomain PauseOrganisation(int id)
+        {
+            var orgToPause = _context.Organisations.Find(id);
+            orgToPause.Status = "Paused";
+            _context.Organisations.Attach(orgToPause);
+            _context.SaveChanges();
+            var org = _context.Organisations.Find(id);
+            return org.ToDomain();
         }
     }
 }
