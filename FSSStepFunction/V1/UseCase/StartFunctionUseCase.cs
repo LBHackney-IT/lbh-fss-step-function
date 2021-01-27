@@ -17,7 +17,7 @@ namespace LbhFssStepFunction.V1.UseCase
     {
         private readonly IOrganisationsGateway _organisationsGateway;
         private readonly string fssStateMachineArn = Environment.GetEnvironmentVariable("FSS_STEP_FUNCTION_ARN");
-        private readonly string accessId= Environment.GetEnvironmentVariable("ACCESS_ID");
+        private readonly string accessId = Environment.GetEnvironmentVariable("ACCESS_ID");
         private readonly string accessKey = Environment.GetEnvironmentVariable("ACCESS_KEY");
         public StartFunctionUseCase(IOrganisationsGateway gateway = null)
         {
@@ -30,7 +30,7 @@ namespace LbhFssStepFunction.V1.UseCase
             var organisations = _organisationsGateway.GetOrganisationsToReview();
             if (organisations != null)
             {
-                var amazonStepFunctionsConfig = new AmazonStepFunctionsConfig {RegionEndpoint = RegionEndpoint.EUWest2};
+                var amazonStepFunctionsConfig = new AmazonStepFunctionsConfig { RegionEndpoint = RegionEndpoint.EUWest2 };
                 using (var amazonStepFunctionsClient =
                     new AmazonStepFunctionsClient(accessId, accessKey, amazonStepFunctionsConfig))
                 {
