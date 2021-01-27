@@ -18,7 +18,7 @@ namespace LbhFssStepFunction.V1.Gateways
 
         public NotifyGateway()
         {
-            
+
         }
 
         public async Task SendNotificationEmail(string organisation, string[] addresses, int state)
