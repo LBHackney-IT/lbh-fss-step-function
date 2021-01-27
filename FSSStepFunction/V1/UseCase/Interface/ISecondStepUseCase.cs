@@ -1,7 +1,9 @@
+using System.Threading.Tasks;
+
 namespace LbhFssStepFunction.V1.UseCase.Interface
 {
     public interface ISecondStepUseCase
     {
-        OrganisationResponse GetOrganisationAndSendEmail(int id);
+        Task<OrganisationResponse> GetOrganisationAndSendEmail(int id);
     }
 }
