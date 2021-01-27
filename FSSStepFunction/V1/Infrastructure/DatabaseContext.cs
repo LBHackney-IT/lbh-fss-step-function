@@ -52,6 +52,8 @@ namespace LbhFssStepFunction.V1.Infrastructure
                 entity.Property(e => e.SubmittedAt).HasColumnName("submitted_at");
 
                 entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+                entity.Property(e => e.LastRevalidation).HasColumnName("last_revalidation");
+                entity.Property(e => e.InRevalidationProcess).HasColumnName("in_revalidation_process");
             });
 
             modelBuilder.Entity<UserOrganisationEntity>(entity =>

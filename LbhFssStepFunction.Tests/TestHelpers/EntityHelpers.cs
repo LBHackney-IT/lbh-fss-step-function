@@ -10,7 +10,7 @@ namespace LbhFssStepFunction.Tests.TestHelpers
     public static class EntityHelpers
     {
         const int _count = 3;
-        
+
         public static OrganisationEntity CreateOrganisation()
         {
             var organisation = Randomm.Build<OrganisationEntity>()
@@ -18,5 +18,16 @@ namespace LbhFssStepFunction.Tests.TestHelpers
                 .Create();
             return organisation;
         }
+
+        public static ICollection<OrganisationEntity> CreateOrganisations(int count = 3)
+        {
+            var organisations = new List<OrganisationEntity>();
+            for (var a = 0; a < count; a++)
+            {
+                organisations.Add(CreateOrganisation());
+            }
+            return organisations;
+        }
+
     }
 }

@@ -12,14 +12,14 @@ namespace LbhFssStepFunction.Tests
     [TestFixture]
     public class HandlerTests
     {
-        private static Fixture _fixture = new Fixture();   
+        private static Fixture _fixture = new Fixture();
         private Handler _classUnderTest;
         private Mock<IStartFunctionUseCase> _mockStartFunctionUseCase;
         private Mock<IFirstStepUseCase> _mockFirstStepUseCase;
         private Mock<ISecondStepUseCase> _mockSecondStepUseCase;
         private Mock<IThirdStepUseCase> _mockThirdStepUseCase;
         private Mock<IPauseStepUseCase> _mockPauseStepUseCase;
-        
+
         [SetUp]
         public void Setup()
         {
@@ -41,16 +41,16 @@ namespace LbhFssStepFunction.Tests
             _classUnderTest.StartFunction();
             _mockStartFunctionUseCase.Verify(uc => uc.Execute(), Times.Once);
         }
-        
+
         [TestCase(TestName = "Given that the first step function gets called, it calls the first step use case GetOrganisationAndSendEmail method.")]
         public void FirstStepHandlerCallsFirstStepUseCase()
         {
             var request = _fixture.Create<OrganisationRequest>();
             _classUnderTest.FirstStep(request);
-            _mockFirstStepUseCase.Verify(uc => 
+            _mockFirstStepUseCase.Verify(uc =>
                 uc.GetOrganisationAndSendEmail(It.Is<int>(x => x == request.OrganisationId)), Times.Once);
         }
-        
+
         [TestCase(TestName = "Given that the first step function gets called with a valid organisation id, it returns an Organisation Response.")]
         public async Task FirstStepHandlerReturnsOrganisationResponse()
         {
@@ -60,16 +60,16 @@ namespace LbhFssStepFunction.Tests
             var response = await _classUnderTest.FirstStep(request);
             response.Should().Be(expectedResponse);
         }
-        
+
         [TestCase(TestName = "Given that the second step function gets called, it calls the second step use case GetOrganisationAndSendEmail method.")]
         public void SecondStepHandlerCallsSecondStepUseCase()
         {
             var request = _fixture.Create<OrganisationRequest>();
             _classUnderTest.SecondStep(request);
-            _mockSecondStepUseCase.Verify(uc => 
+            _mockSecondStepUseCase.Verify(uc =>
                 uc.GetOrganisationAndSendEmail(It.Is<int>(x => x == request.OrganisationId)), Times.Once);
         }
-        
+
         [TestCase(TestName = "Given that the second step function gets called with a valid organisation id, it returns an Organisation Response.")]
         public async Task SecondStepHandlerReturnsOrganisationResponse()
         {
@@ -79,16 +79,16 @@ namespace LbhFssStepFunction.Tests
             var response = await _classUnderTest.SecondStep(request);
             response.Should().Be(expectedResponse);
         }
-        
+
         [TestCase(TestName = "Given that the third step function gets called, it calls the third step use case GetOrganisationAndSendEmail method.")]
         public void ThirdStepHandlerCallsThirdStepUseCase()
         {
             var request = _fixture.Create<OrganisationRequest>();
             _classUnderTest.ThirdStep(request);
-            _mockThirdStepUseCase.Verify(uc => 
+            _mockThirdStepUseCase.Verify(uc =>
                 uc.GetOrganisationAndSendEmail(It.Is<int>(x => x == request.OrganisationId)), Times.Once);
         }
-        
+
         [TestCase(TestName = "Given that the third step function gets called with a valid organisation id, it returns an Organisation Response.")]
         public async Task ThirdStepHandlerReturnsOrganisationResponse()
         {
@@ -98,16 +98,16 @@ namespace LbhFssStepFunction.Tests
             var response = await _classUnderTest.ThirdStep(request);
             response.Should().Be(expectedResponse);
         }
-        
+
         [TestCase(TestName = "Given that the pause step function gets called, it calls the pause step use case GetOrganisationAndSendEmail method.")]
         public void PauseStepHandlerCallsPauseStepUseCase()
         {
             var request = _fixture.Create<OrganisationRequest>();
             _classUnderTest.PauseStep(request);
-            _mockPauseStepUseCase.Verify(uc => 
+            _mockPauseStepUseCase.Verify(uc =>
                 uc.GetOrganisationAndSendEmail(It.Is<int>(x => x == request.OrganisationId)), Times.Once);
         }
-        
+
         [TestCase(TestName = "Given that the pause step function gets called with a valid organisation id, it returns an Organisation Response.")]
         public async Task PauseStepHandlerReturnsOrganisationResponse()
         {
