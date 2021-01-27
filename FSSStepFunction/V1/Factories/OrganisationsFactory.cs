@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using LbhFssStepFunction.V1.Domains;
 using LbhFssStepFunction.V1.Infrastructure;
 
@@ -31,7 +32,6 @@ namespace LbhFssStepFunction.V1.Factories
             {
                 OrganisationId = organisationDomain.Id,
                 OrganisationName = organisationDomain.Name,
-                Status = organisationDomain.Status,
                 EmailAddresses = new List<string>()
             };
             foreach (var userOrg in organisationDomain.UserOrganisations)
@@ -42,6 +42,11 @@ namespace LbhFssStepFunction.V1.Factories
                 }
             }
             return orgResponse;
+        }
+
+        public static List<OrganisationResponse> ToResponse(this IEnumerable<OrganisationDomain> organisationDomainList)
+        {
+            return organisationDomainList?.Select(odl => odl.ToResponse()).ToList();
         }
     }
 }
