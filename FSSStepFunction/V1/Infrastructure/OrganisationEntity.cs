@@ -17,6 +17,8 @@ namespace LbhFssStepFunction.V1.Infrastructure
         public DateTime? UpdatedAt { get; set; }
         public DateTime? ReviewedAt { get; set; }
         public string Status { get; set; }
+        public DateTime? LastRevalidation { get; set; }
+        public bool InRevalidationProcess { get; set; }
         public virtual ICollection<UserOrganisationEntity> UserOrganisations { get; set; }
     }
 }

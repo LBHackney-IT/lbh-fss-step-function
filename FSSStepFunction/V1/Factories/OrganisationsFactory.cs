@@ -20,6 +20,8 @@ namespace LbhFssStepFunction.V1.Factories
                 SubmittedAt = organisationEntity.SubmittedAt,
                 ReviewedAt = organisationEntity.ReviewedAt,
                 UpdatedAt = organisationEntity.UpdatedAt,
+                LastRevalidation = organisationEntity.LastRevalidation,
+                InRevalidationProcess = organisationEntity.InRevalidationProcess,
                 UserOrganisations = organisationEntity.UserOrganisations.ToDomain()
             };
         }
@@ -34,11 +36,14 @@ namespace LbhFssStepFunction.V1.Factories
                 OrganisationName = organisationDomain.Name,
                 EmailAddresses = new List<string>()
             };
-            foreach (var userOrg in organisationDomain.UserOrganisations)
+            if (organisationDomain.UserOrganisations != null)
             {
-                if (userOrg.User.Status.ToLower() == "active")
+                foreach (var userOrg in organisationDomain.UserOrganisations)
                 {
-                    orgResponse.EmailAddresses.Add(userOrg.User.Email);
+                    if (userOrg.User.Status.ToLower() == "active")
+                    {
+                        orgResponse.EmailAddresses.Add(userOrg.User.Email);
+                    }
                 }
             }
             return orgResponse;
