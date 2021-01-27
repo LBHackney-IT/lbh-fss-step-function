@@ -12,12 +12,12 @@ namespace LbhFssStepFunction.V1.UseCase
     {
         private readonly IOrganisationsGateway _organisationsGateway;
         private readonly INotifyGateway _notifyGateway;
-        private readonly string _waitDuration= Environment.GetEnvironmentVariable("WAIT_DURATION");
+        private readonly string _waitDuration = Environment.GetEnvironmentVariable("WAIT_DURATION");
 
-        public SecondStepUseCase()
+        public SecondStepUseCase(IOrganisationsGateway organisationsGateway = null, INotifyGateway notifyGateway = null)
         {
-            _organisationsGateway = new OrganisationsGateway();
-            _notifyGateway = new NotifyGateway();
+            _organisationsGateway = organisationsGateway ?? new OrganisationsGateway();
+            _notifyGateway = notifyGateway ?? new NotifyGateway();
         }
         public async Task<OrganisationResponse> GetOrganisationAndSendEmail(int id)
         {

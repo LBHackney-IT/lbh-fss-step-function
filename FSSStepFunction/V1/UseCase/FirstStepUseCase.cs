@@ -12,19 +12,21 @@ namespace LbhFssStepFunction.V1.UseCase
     {
         private readonly IOrganisationsGateway _organisationsGateway;
         private readonly INotifyGateway _notifyGateway;
-        private readonly string _waitDuration= Environment.GetEnvironmentVariable("WAIT_DURATION");
+        private readonly string _waitDuration = Environment.GetEnvironmentVariable("WAIT_DURATION");
 
-        public FirstStepUseCase()
+        public FirstStepUseCase(IOrganisationsGateway organisationsGateway = null, INotifyGateway notifyGateway = null)
         {
-            _organisationsGateway = new OrganisationsGateway();
-            _notifyGateway = new NotifyGateway();
+            _organisationsGateway = organisationsGateway ?? new OrganisationsGateway();
+            _notifyGateway = notifyGateway ?? new NotifyGateway();
         }
+
         public async Task<OrganisationResponse> GetOrganisationAndSendEmail(int id)
         {
             LoggingHandler.LogInfo("Executing request to gateway to get organisation");
-            var organisation = _organisationsGateway.GetOrganisationById(id).ToResponse();
-            if (organisation == null)
+            var organisationDomain = _organisationsGateway.GetOrganisationById(id);
+            if (organisationDomain == null)
                 return null;
+            var organisation = organisationDomain.ToResponse();
             await _notifyGateway.SendNotificationEmail(organisation.OrganisationName, organisation.EmailAddresses.ToArray(), 1).ConfigureAwait(true);
             organisation.StateResult = true;
             //ToDo: Change AddSeconds to AddDays
