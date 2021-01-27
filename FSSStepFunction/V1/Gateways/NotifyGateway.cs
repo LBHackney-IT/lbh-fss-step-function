@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using LbhFssStepFunction.V1.Gateways.Interface;
 using LbhFssStepFunction.V1.Handlers;
@@ -9,7 +10,6 @@ namespace LbhFssStepFunction.V1.Gateways
 {
     public class NotifyGateway : INotifyGateway
     {
-        private readonly NotificationClient _client;
         private static string _notifyKey = Environment.GetEnvironmentVariable("NOTIFY_KEY");
         private static string _reverificationFirstEmailTemplate = Environment.GetEnvironmentVariable("REVERIFICATION_FIRST_EMAIL_TEMPLATE");
         private static string _reverificationSecondEmailTemplate = Environment.GetEnvironmentVariable("REVERIFICATION_SECOND_EMAIL_TEMPLATE");
@@ -18,12 +18,15 @@ namespace LbhFssStepFunction.V1.Gateways
 
         public NotifyGateway()
         {
-            _client = new NotificationClient(_notifyKey);
+            
         }
 
-        public async Task SendNotificationEmail(string[] addresses, int state)
+        public async Task SendNotificationEmail(string organisation, string[] addresses, int state)
         {
+            var _client = new NotificationClient(_notifyKey);
             var notifyTemplate = string.Empty;
+            var personalisation = new Dictionary<string, dynamic>();
+            personalisation.Add("CompanyName", organisation ?? "");
             switch (state)
             {
                 case 1:
@@ -44,8 +47,8 @@ namespace LbhFssStepFunction.V1.Gateways
             {
                 for (int a = 0; a < addresses.Length; a++)
                 {
-                    await _client.SendEmailAsync(addresses[a], notifyTemplate).ConfigureAwait(false);
-                    LoggingHandler.LogInfo($"Successfully sent email to {addresses[a]}");
+                    await _client.SendEmailAsync(addresses[a], notifyTemplate, personalisation).ConfigureAwait(false);
+                    LoggingHandler.LogInfo($"Successfully sent email to organisation recipients");
                 }
             }
             catch (NotifyClientException e)
