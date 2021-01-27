@@ -1,5 +1,8 @@
+using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using LbhFssStepFunction.V1;
+using LbhFssStepFunction.V1.Boundary.Requests;
+using LbhFssStepFunction.V1.Handlers;
 using LbhFssStepFunction.V1.UseCase;
 using LbhFssStepFunction.V1.UseCase.Interface;
 
@@ -12,38 +15,45 @@ namespace LbhFssStepFunction
         private readonly ISecondStepUseCase _secondStepUseCase;
         private readonly IThirdStepUseCase _thirdStepUseCase;
         private readonly IPauseStepUseCase _pauseStepUseCase;
+        private readonly IStartFunctionUseCase _startFunctionUseCase;
 
-        public Handler()
+        public Handler(IStartFunctionUseCase startFunctionUseCase = null,
+        IFirstStepUseCase firstStepUseCase = null,
+        ISecondStepUseCase secondStepUseCase = null,
+        IThirdStepUseCase thirdStepUseCase = null,
+        IPauseStepUseCase pauseStepUseCase = null)
         {
-            _firstStepUseCase = new FirstStepUseCase();
-            _secondStepUseCase = new SecondStepUseCase();
-            _thirdStepUseCase = new ThirdStepUseCase();
-            _pauseStepUseCase = new PauseStepUseCase();
-        }
-        public OrganisationResponse FirstStep(Request request)
-        {
-            return _firstStepUseCase.GetOrganisationAndSendEmail(request.organisationId);
-        }
-
-        public OrganisationResponse SecondStep(Request request)
-        {
-            return _secondStepUseCase.GetOrganisationAndSendEmail(request.organisationId);
+            _startFunctionUseCase = startFunctionUseCase ?? new StartFunctionUseCase();
+            _firstStepUseCase = firstStepUseCase ?? new FirstStepUseCase();
+            _secondStepUseCase = secondStepUseCase ?? new SecondStepUseCase();
+            _thirdStepUseCase = thirdStepUseCase ?? new ThirdStepUseCase();
+            _pauseStepUseCase = pauseStepUseCase ?? new PauseStepUseCase();
         }
 
-        public OrganisationResponse ThirdStep(Request request)
+        public void StartFunction()
         {
-            return _thirdStepUseCase.GetOrganisationAndSendEmail(request.organisationId);
+            LoggingHandler.LogInfo("Organisation review scheduled job started");
+            _startFunctionUseCase.Execute();
+        }
+        public async Task<OrganisationResponse> FirstStep(OrganisationRequest request)
+        {
+            return await _firstStepUseCase.GetOrganisationAndSendEmail(request.OrganisationId).ConfigureAwait(true);
         }
 
-        public OrganisationResponse PauseStep(Request request)
+        public async Task<OrganisationResponse> SecondStep(OrganisationRequest request)
         {
-            return _pauseStepUseCase.GetOrganisationAndSendEmail(request.organisationId);
+            return await _secondStepUseCase.GetOrganisationAndSendEmail(request.OrganisationId).ConfigureAwait(true);
         }
 
-    }
+        public async Task<OrganisationResponse> ThirdStep(OrganisationRequest request)
+        {
+            return await _thirdStepUseCase.GetOrganisationAndSendEmail(request.OrganisationId).ConfigureAwait(true);
+        }
 
-    public class Request
-    {
-        public int organisationId { get; set; }
+        public async Task<OrganisationResponse> PauseStep(OrganisationRequest request)
+        {
+            return await _pauseStepUseCase.GetOrganisationAndSendEmail(request.OrganisationId).ConfigureAwait(true);
+        }
+
     }
 }
