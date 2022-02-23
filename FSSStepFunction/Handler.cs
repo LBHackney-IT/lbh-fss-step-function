@@ -17,6 +17,14 @@ namespace LbhFssStepFunction
         private readonly IPauseStepUseCase _pauseStepUseCase;
         private readonly IStartFunctionUseCase _startFunctionUseCase;
 
+        public Handler()
+        {
+            _startFunctionUseCase = new StartFunctionUseCase();
+            _firstStepUseCase = new FirstStepUseCase();
+            _secondStepUseCase = new SecondStepUseCase();
+            _thirdStepUseCase = new ThirdStepUseCase();
+            _pauseStepUseCase = new PauseStepUseCase();
+        }
         public Handler(IStartFunctionUseCase startFunctionUseCase = null,
         IFirstStepUseCase firstStepUseCase = null,
         ISecondStepUseCase secondStepUseCase = null,
