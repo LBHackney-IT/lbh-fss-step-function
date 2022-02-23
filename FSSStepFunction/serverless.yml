@@ -25,7 +25,7 @@ package:
 
 functions:
   startFunction:
-    description: "The scheduler to check for FSS org reviews and trigger step functions.  Runs every 10 minutes"
+    description: "The scheduler to check for FSS org reviews and trigger step functions.  Runs every 2 minutes"
     handler: CsharpHandlers::LbhFssStepFunction.Handler::StartFunction
     events:
       - schedule:
