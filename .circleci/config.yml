@@ -70,12 +70,12 @@ jobs:
     executor: docker-dotnet
     steps:
       - checkout
-      - run:
-          name: Install dotnet format
-          command: dotnet tool install dotnet-format --tool-path ./dotnet-format-local/
-      - run:
-          name: Run formatter check
-          command: ./dotnet-format-local/dotnet-format --dry-run --check
+#      - run:
+#          name: Install dotnet format
+#          command: dotnet tool install dotnet-format --tool-path ./dotnet-format-local/
+#      - run:
+#          name: Run formatter check
+#          command: ./dotnet-format-local/dotnet-format --dry-run
   #  build-and-test:
   #    executor: docker-python
   #    steps:
