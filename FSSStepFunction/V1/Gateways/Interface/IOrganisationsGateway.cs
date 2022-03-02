@@ -8,5 +8,6 @@ namespace LbhFssStepFunction.V1.Gateways.Interface
         OrganisationDomain GetOrganisationById(int id);
         List<OrganisationDomain> GetOrganisationsToReview();
         OrganisationDomain PauseOrganisation(int id);
+        void FlagOrganisationToBeInRevalidation(int id);
     }
 }

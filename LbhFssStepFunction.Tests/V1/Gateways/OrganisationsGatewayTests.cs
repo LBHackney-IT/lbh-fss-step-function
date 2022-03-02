@@ -4,6 +4,8 @@ using LbhFssStepFunction.Tests.TestHelpers;
 using LbhFssStepFunction.V1.Gateways;
 using NUnit.Framework;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using LbhFssStepFunction.V1.Errors;
 
 namespace LbhFssStepFunction.Tests.V1.Gateways
 {
@@ -76,6 +78,46 @@ namespace LbhFssStepFunction.Tests.V1.Gateways
             DatabaseContext.SaveChanges();
             var result = _classUnderTest.PauseOrganisation(organisation.Id);
             result.Status.Should().Be("Paused");
+        }
+
+        [TestCase(TestName = @"
+            Given an organisation id of existing organisation, 
+            When the FlagOrganisationToBeInRevalidation Gateway method is called, 
+            Then the organisation's record in the database gets flagged to be in the re-verification process")]
+        public void UpdatingExistingOrgsReverificationStatusWorks()
+        {
+            // arrange
+            var organisation = EntityHelpers.CreateOrganisation();
+            organisation.InRevalidationProcess = false;
+            DatabaseContext.Add(organisation);
+            DatabaseContext.SaveChanges();
+
+            int existingOrganisationId = organisation.Id;
+
+            // act
+            _classUnderTest.FlagOrganisationToBeInRevalidation(existingOrganisationId);
+
+            DatabaseContext.Entry(organisation).State = EntityState.Detached; // Ruling out the change tracker
+
+            // assert
+            var retrievedOrganisation = DatabaseContext.Organisations.First(o => o.Id == existingOrganisationId);
+            retrievedOrganisation.InRevalidationProcess.Should().BeTrue();
+        }
+
+        [TestCase(TestName = @"
+            Given an organisation id of non-existent organisation,
+            When the FlagOrganisationToBeInRevalidation Gateway method is called,
+            Then the execution flow terminates with ResourceNotFound exception")]
+        public void AttemptinToUpdateNonExistentOrgThrowsAnException()
+        {
+            // arrange
+            int randomOrgId = Randomm.Id(100, 200);
+
+            // act
+            Action testMethodCall = () => _classUnderTest.FlagOrganisationToBeInRevalidation(randomOrgId);
+
+            // assert
+            testMethodCall.Should().Throw<ResourceNotFoundException>();
         }
     }
 }
