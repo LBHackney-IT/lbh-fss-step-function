@@ -32,6 +32,10 @@ namespace LbhFssStepFunction.Tests.V1.UseCase
             It calls the organisation gateway GetOrganisationsToReview method.")]
         public async Task FirstStepUseCaseCallsOrganisationGateway()
         {
+            // arrange
+            _mockOrganisationGateway.Setup(
+                gw => gw.GetOrganisationById(It.IsAny<int>())).Returns(EntityHelpers.CreateOrganisation().ToDomain());
+            
             // act
             await _classUnderTest.GetOrganisationAndSendEmail(1);
             
@@ -66,9 +70,10 @@ namespace LbhFssStepFunction.Tests.V1.UseCase
         {
             // arrange
             int randomOrgId = Randomm.Id(100, 200);
+            _mockOrganisationGateway.Setup(
+                gw => gw.GetOrganisationById(It.IsAny<int>())).Returns(EntityHelpers.CreateOrganisation().ToDomain());
 
             // act
-            // _mockOrganisationGateway.Setup(gw => gw.FlagOrganisationToBeInRevalidation(It.IsAny<int>()));
             await _classUnderTest.GetOrganisationAndSendEmail(randomOrgId);
 
             // assert
@@ -85,7 +90,7 @@ namespace LbhFssStepFunction.Tests.V1.UseCase
             int randomOrgId = Randomm.Id(100, 200);
             _mockOrganisationGateway.Setup(gw => gw.FlagOrganisationToBeInRevalidation(It.IsAny<int>()))
                 .Throws(new ResourceNotFoundException("Error"));
-
+            
             // act
             var ucResult = await _classUnderTest.GetOrganisationAndSendEmail(randomOrgId);
 
