@@ -28,7 +28,7 @@ namespace LbhFssStepFunction.Tests.V1.UseCase
             _classUnderTest = new ThirdStepUseCase(_mockOrganisationGateway.Object, _mockNotifyGateway.Object);
         }
 
-[TestCase(TestName = @"
+        [TestCase(TestName = @"
             Given any Organisation Id,
             When the third step use case gets called,
             Then it always calls the organisation gateway's GetOrganisationById method with correct parameters.")]

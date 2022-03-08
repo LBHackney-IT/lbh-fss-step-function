@@ -56,4 +56,4 @@ namespace LbhFssStepFunction.V1.UseCase
             }
         }
     }
-} 
+}

@@ -21,7 +21,7 @@ namespace LbhFssStepFunction.V1.UseCase
         }
         public async Task<OrganisationResponse> GetOrganisationAndSendEmail(int id)
         {
-            LoggingHandler.LogInfo("Second step executing request to gateway to get organisation");
+            LoggingHandler.LogInfo("Third step executing request to gateway to get organisation");
             var organisation = _organisationsGateway.GetOrganisationById(id);
             
             if (organisation == null)
@@ -36,7 +36,7 @@ namespace LbhFssStepFunction.V1.UseCase
             }
             else {
                 LoggingHandler.LogInfo($"Organisation with Id={id} was found, attempting to send out emails.");
-                var organisationResponse = organisation.ToResponse(); // TODO: Need refactoring! This should be domain logic
+                var organisationResponse = organisation.ToResponse();
 
                 await _notifyGateway
                     .SendNotificationEmail(
@@ -48,7 +48,7 @@ namespace LbhFssStepFunction.V1.UseCase
                 organisationResponse.StateResult = true;
 
                 DateTime nextRunDate = DateTime.Now.AddSeconds(Int32.Parse(_waitDuration));
-                //ToDo: Change AddSeconds to AddDays
+
                 organisationResponse.NextStepTime = nextRunDate;
                 
                 LoggingHandler.LogInfo($"Pause Step is scheduled at: {string.Concat(nextRunDate.ToString("s"), "Z")}.");
