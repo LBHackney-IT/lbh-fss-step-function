@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using LbhFssStepFunction.Tests.TestHelpers;
+using LbhFssStepFunction.V1.Domains;
 using LbhFssStepFunction.V1.Factories;
 using LbhFssStepFunction.V1.Gateways.Interface;
 using LbhFssStepFunction.V1.UseCase;
@@ -39,17 +41,22 @@ namespace LbhFssStepFunction.Tests.V1.UseCase
             await _classUnderTest.GetOrganisationAndSendEmail(randomId);
             
             // assert
-            _mockOrganisationGateway.Verify(gw => gw.GetOrganisationById(It.Is<int>(id => id == randomId)), Times.Once);
+            _mockOrganisationGateway.Verify(
+                gw => gw.GetOrganisationById(It.Is<int>(id => id == randomId)), 
+                Times.Once);
         }
 
         [TestCase(TestName = @"
             Given an existing Organisation Id,
             And that organisation being in Revalidation process, 
             When the second step use case gets called,
-            Then it calls the notify gateway SendNotificationEmail method with correct parameters.")]
-        public async Task SecondStepUseCaseCallsNotificationGatewayWithCorrectParams()
+            Then it calls the notify gateway SendNotificationEmail method with correct parameters,
+            And it returns the correct organisation & Next Step state data.")]
+        public async Task SecondStepUseCaseCallsNotificationGatewayWithCorrectParamsIfOrganisationWasNotUpdated()
         {
             // arrange
+            int waitDuration = Int32.Parse(Environment.GetEnvironmentVariable("WAIT_DURATION"));
+
             int existingId = Randomm.Id();
             var organisation = EntityHelpers.CreateOrganisationWithUsers(activeUsers: true);
 
@@ -65,7 +72,7 @@ namespace LbhFssStepFunction.Tests.V1.UseCase
                 .Returns(domainOrganisation);
             
             // act
-            await _classUnderTest.GetOrganisationAndSendEmail(existingId);
+            var ucResult = await _classUnderTest.GetOrganisationAndSendEmail(existingId);
             
             // assert
             _mockNotifyGateway.Verify(
@@ -74,6 +81,82 @@ namespace LbhFssStepFunction.Tests.V1.UseCase
                     It.Is<string[]>(es => es.All(e => emails.Contains(e)) && es.Count() == emails.Count()), 
                     It.Is<int>(state => state == 2)), 
                 Times.Once);
+
+            ucResult.Should().NotBeNull();
+            ucResult.EmailAddresses.Should().BeEquivalentTo(emails);
+            // Next step time should be ±2 seconds from the time the UC was executed. Should be accurate enough for testing purposes.
+            ucResult.NextStepTime.Should().BeCloseTo(DateTime.Now.AddSeconds(waitDuration), precision: 2000);
+            ucResult.StateResult.Should().BeTrue();
+            ucResult.OrganisationId.Should().Be(existingId); // the rest of the organisations data is irrelevant.
+        }
+
+        [TestCase(TestName = @"
+            Given an existing Organisation Id,
+            And that organisation NOT being in Revalidation process,
+            When the Step 2 Usecase gets called,
+            Then it does NOT call the notify gateway's SendNotfication method,
+            And it returns a NULL result.")]
+        public async Task SecondStepUCDoesNotCallNotifyGWAndReturnsNullWhenOrganisationWasUpdated()
+        {
+            // arrange
+            int existingId = Randomm.Id();
+
+            var organisation = EntityHelpers.CreateOrganisationWithUsers(activeUsers: true);
+            organisation.Id = existingId;
+            
+            // This being false implies that organisation was updated between steps 1 and 2.
+            // It is because Step 1 switches this value to to "true", so it can only be changed
+            // to "false" external influence.
+            organisation.InRevalidationProcess = false;
+
+            var domainOrganisation = organisation.ToDomain();
+
+            _mockOrganisationGateway
+                .Setup(gw => gw.GetOrganisationById(It.Is<int>(id => id == existingId)))
+                .Returns(domainOrganisation);
+
+            // act
+            var ucResult = await _classUnderTest.GetOrganisationAndSendEmail(existingId);
+
+            // assert
+            _mockNotifyGateway.Verify(
+                gw => gw.SendNotificationEmail(
+                    It.IsAny<string>(),
+                    It.IsAny<string[]>(),
+                    It.IsAny<int>()),
+                Times.Never);
+
+            ucResult.Should().BeNull(); // Should be a more complicted assertion, but such "return" is outside MVP scope.
+        }
+
+        [TestCase(TestName = @"
+            Given a NOT existing Organisation Id,
+            When the Step 2 Usecase gets called,
+            Then it does NOT call notify gateway's SendNotfication method,
+            And it returns a NULL result.")]
+        public async Task SecondStepUCDoesNotCallNotifyGWAndReturnsNullWhenOrganisationIsNotFound()
+        {
+            // arrange
+            int nonExistingId = Randomm.Id();
+            // organisation was removed between the triggering of Step 1 and Step 2
+            OrganisationDomain organisation = null;
+
+            _mockOrganisationGateway
+                .Setup(gw => gw.GetOrganisationById(It.Is<int>(id => id == nonExistingId)))
+                .Returns(organisation);
+
+            // act
+            var ucResult = await _classUnderTest.GetOrganisationAndSendEmail(nonExistingId);
+
+            // assert
+            _mockNotifyGateway.Verify(
+                gw => gw.SendNotificationEmail(
+                    It.IsAny<string>(),
+                    It.IsAny<string[]>(),
+                    It.IsAny<int>()),
+                Times.Never);
+            
+            ucResult.Should().BeNull(); // A more proper return requires doing a small tech spike.
         }
     }
 }

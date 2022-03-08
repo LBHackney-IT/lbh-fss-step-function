@@ -22,14 +22,38 @@ namespace LbhFssStepFunction.V1.UseCase
         public async Task<OrganisationResponse> GetOrganisationAndSendEmail(int id)
         {
             LoggingHandler.LogInfo("Second step executing request to gateway to get organisation");
-            var organisation = _organisationsGateway.GetOrganisationById(id).ToResponse();
+            var organisation = _organisationsGateway.GetOrganisationById(id);
+            
             if (organisation == null)
+            {
+                LoggingHandler.LogInfo($"Organisation with Id={id} can no longer be found!");
                 return null;
-            await _notifyGateway.SendNotificationEmail(organisation.OrganisationName, organisation.EmailAddresses.ToArray(), 2).ConfigureAwait(true);
-            organisation.StateResult = true;
-            //ToDo: Change AddSeconds to AddDays
-            organisation.NextStepTime = DateTime.Now.AddSeconds(Int32.Parse(_waitDuration));
-            return organisation;
+            }
+            else if (!organisation.InRevalidationProcess)
+            {
+                LoggingHandler.LogInfo($"Organisation with Id={id} is no longer in Reverification process!");
+                return null;
+            }
+            else {
+                LoggingHandler.LogInfo($"Organisation with Id={id} was found, attempting to send out emails.");
+                var organisationResponse = organisation.ToResponse(); // TODO: Need refactoring! This should be domain logic
+
+                await _notifyGateway
+                    .SendNotificationEmail(
+                        organisationResponse.OrganisationName, 
+                        organisationResponse.EmailAddresses.ToArray(), 
+                        2)
+                    .ConfigureAwait(true);
+
+                organisationResponse.StateResult = true;
+
+                DateTime nextRunDate = DateTime.Now.AddSeconds(Int32.Parse(_waitDuration));
+                //ToDo: Change AddSeconds to AddDays
+                organisationResponse.NextStepTime = nextRunDate;
+                
+                LoggingHandler.LogInfo($"Step 3 is scheduled at: {string.Concat(nextRunDate.ToString("s"), "Z")}.");
+                return organisationResponse;
+            }
         }
     }
-}
+} 
