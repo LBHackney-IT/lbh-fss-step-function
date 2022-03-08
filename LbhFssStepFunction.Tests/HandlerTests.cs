@@ -43,21 +43,30 @@ namespace LbhFssStepFunction.Tests
         }
 
         [TestCase(TestName = "Given that the first step function gets called, it calls the first step use case GetOrganisationAndSendEmail method.")]
-        public void FirstStepHandlerCallsFirstStepUseCase()
+        public async Task FirstStepHandlerCallsFirstStepUseCase()
         {
             var request = _fixture.Create<OrganisationRequest>();
-            _classUnderTest.FirstStep(request);
+            await _classUnderTest.FirstStep(request);
             _mockFirstStepUseCase.Verify(uc =>
                 uc.GetOrganisationAndSendEmail(It.Is<int>(x => x == request.OrganisationId)), Times.Once);
         }
 
-        [TestCase(TestName = "Given that the first step function gets called with a valid organisation id, it returns an Organisation Response.")]
+        [TestCase(TestName = @"
+            Given a valid organisation id,
+            When the first step function gets called,
+            Then it returns an Organisation Response.")]
         public async Task FirstStepHandlerReturnsOrganisationResponse()
         {
+            // arrange
             var request = _fixture.Create<OrganisationRequest>();
             var expectedResponse = _fixture.Create<OrganisationResponse>();
+            
             _mockFirstStepUseCase.Setup(x => x.GetOrganisationAndSendEmail(It.IsAny<int>())).ReturnsAsync(expectedResponse);
+            
+            // act
             var response = await _classUnderTest.FirstStep(request);
+
+            // assert
             response.Should().Be(expectedResponse);
         }
 

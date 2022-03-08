@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LbhFssStepFunction.V1.Domains;
+using LbhFssStepFunction.V1.Errors;
 using LbhFssStepFunction.V1.Factories;
 using LbhFssStepFunction.V1.Gateways.Interface;
 using LbhFssStepFunction.V1.Handlers;
@@ -47,7 +48,8 @@ namespace LbhFssStepFunction.V1.Gateways
                 .Where(x => x.LastRevalidation < DateTime.Today.AddDays(-365))
                 .Where(x => x.InRevalidationProcess == false)
                 .Where(x => x.Status.ToLower() == "published")
-                .Select(org => org.ToDomain()).ToList();
+                .Select(org => org.ToDomain())
+                .ToList();
             return orgsToReview;
         }
 
@@ -59,6 +61,28 @@ namespace LbhFssStepFunction.V1.Gateways
             _context.SaveChanges();
             var org = _context.Organisations.Find(id);
             return org.ToDomain();
+        }
+
+        public void FlagOrganisationToBeInRevalidation(int id)
+        {
+            try {
+                LoggingHandler.LogInfo($"Attempting to put organisation with id={id} to re-validation process");
+                
+                var organistionToFlag = _context.Organisations.Find(id);
+
+                if (organistionToFlag == null)
+                    throw new ResourceNotFoundException($"Organisation with id={id} was not found.");
+                
+                organistionToFlag.InRevalidationProcess = true;
+                _context.SaveChanges();
+            }
+            catch (Exception ex) {
+                LoggingHandler.LogError($"Failure while flagging organisation with id={id} as in re-validation process!");
+                LoggingHandler.LogError(ex.Message);
+                LoggingHandler.LogError(ex.InnerException?.Message);
+                LoggingHandler.LogError(ex.StackTrace);
+                throw; // terminate
+            }
         }
     }
 }
