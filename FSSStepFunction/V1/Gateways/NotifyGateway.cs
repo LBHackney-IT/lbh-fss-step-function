@@ -21,6 +21,7 @@ namespace LbhFssStepFunction.V1.Gateways
 
         }
 
+        // TODO: Make the List<string> to string[] conversion happen here, not UC.
         public async Task SendNotificationEmail(string organisation, string[] addresses, int state)
         {
             var _client = new NotificationClient(_notifyKey);
