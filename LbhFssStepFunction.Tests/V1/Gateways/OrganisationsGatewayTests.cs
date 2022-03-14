@@ -27,18 +27,21 @@ namespace LbhFssStepFunction.Tests.V1.Gateways
             Then the Gateway will return an organisation that matches")]
         public void GivenAnIdAMatchingOrganisationGetsReturned()
         {
-            // arrane
-            var organisation = EntityHelpers.CreateOrganisation();
-            DatabaseContext.Add(organisation);
+            // arrange
+            var controlOrganisation = EntityHelpers.CreateOrganisation();
+            var testOrganisation = EntityHelpers.CreateOrganisation();
+
+            DatabaseContext.AddRange(controlOrganisation, testOrganisation);
             DatabaseContext.SaveChanges();
 
+            DatabaseContext.Entry(testOrganisation).State = EntityState.Detached; // Ignore change tracker
+
             // act
-            var gatewayResult = _classUnderTest.GetOrganisationById(organisation.Id);
+            var retrievedOrganisation = _classUnderTest.GetOrganisationById(testOrganisation.Id);
 
             // assert
-            var expectedResult = DatabaseContext.Organisations.Find(organisation.Id);
-            gatewayResult.Should().NotBeNull();
-            gatewayResult.Should().BeEquivalentTo(expectedResult, options =>
+            retrievedOrganisation.Should().NotBeNull();
+            retrievedOrganisation.Should().BeEquivalentTo(testOrganisation, options =>
             {
                 options.Excluding(ex => ex.UserOrganisations);
                 return options;
@@ -46,7 +49,25 @@ namespace LbhFssStepFunction.Tests.V1.Gateways
         }
 
         // Not found... return null
-        // Returns the correct one when there are more than 1 in the DB
+        [TestCase(TestName = @"
+            Given a NOT existing organisation id,
+            When the GetOrganisationById Gateway method is called,
+            Then it returns NULL result.")]
+        public void GetSingleOrganisationReturnsNullWhenCalledWithNotExistingId()
+        {
+            // arrange
+            var controlEntity = EntityHelpers.CreateOrganisation();
+            DatabaseContext.Add(controlEntity);
+            DatabaseContext.SaveChanges(); // We don't return null just because DB is empty
+
+            var randomId = Randomm.Id(minimum: 200);
+
+            // act
+            var retrievedOrganisation = _classUnderTest.GetOrganisationById(randomId);
+
+            // assert
+            retrievedOrganisation.Should().BeNull();
+        }
 
         #endregion
         #region Get Multiple Organisations
