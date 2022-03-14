@@ -19,13 +19,23 @@ namespace LbhFssStepFunction.Tests.V1.Gateways
             _classUnderTest = new OrganisationsGateway(ConnectionString.TestDatabase());
         }
 
-        [TestCase(TestName = "Given an organisation id when the gateway is called with the id the gateway will return an organisation that matches")]
+        #region Get Single Organisation
+
+        [TestCase(TestName = @"
+            Given an existing organisation id,
+            When the GetOrganisationById Gateway method is called with the id,
+            Then the Gateway will return an organisation that matches")]
         public void GivenAnIdAMatchingOrganisationGetsReturned()
         {
+            // arrane
             var organisation = EntityHelpers.CreateOrganisation();
             DatabaseContext.Add(organisation);
             DatabaseContext.SaveChanges();
+
+            // act
             var gatewayResult = _classUnderTest.GetOrganisationById(organisation.Id);
+
+            // assert
             var expectedResult = DatabaseContext.Organisations.Find(organisation.Id);
             gatewayResult.Should().NotBeNull();
             gatewayResult.Should().BeEquivalentTo(expectedResult, options =>
@@ -35,10 +45,22 @@ namespace LbhFssStepFunction.Tests.V1.Gateways
             });
         }
 
-        [TestCase(TestName = "Given organisations in the db up for review when the gateway is called these organisations are returned")]
+        // Not found... return null
+        // Returns the correct one when there are more than 1 in the DB
+
+        #endregion
+        #region Get Multiple Organisations
+
+        [TestCase(TestName = @"
+            Given organisations in the db up for review,
+            When the gateway is called,
+            Then these organisations are returned")]
         public void GivenOrganisationAreUpForReviewGetOrganisationsToReviewReturnsTheseOrganisations()
         {
+            // arrange
             var organisations = EntityHelpers.CreateOrganisations(10).ToList();
+
+            // TODO: rewrite this to be more concise
             organisations[0].Status = "Published";
             organisations[0].LastRevalidation = DateTime.Today.AddDays(-370);
             organisations[0].InRevalidationProcess = false;
@@ -59,7 +81,11 @@ namespace LbhFssStepFunction.Tests.V1.Gateways
             organisations[5].InRevalidationProcess = true;
             DatabaseContext.AddRange(organisations);
             DatabaseContext.SaveChanges();
+
+            // act
             var gatewayResult = _classUnderTest.GetOrganisationsToReview();
+
+            // assert
             gatewayResult.Count.Should().Be(3);
             var expectedResult = organisations.Take(3);
             gatewayResult.Should().BeEquivalentTo(expectedResult, options =>
@@ -69,16 +95,37 @@ namespace LbhFssStepFunction.Tests.V1.Gateways
             });
         }
 
-        [TestCase(TestName =
-            "Given an organisation id when the gateway PauseOrganisation method is called the organisation's status is set to Paused")]
-        public void GivenAnOrganisationIdWhenThePauseOrganisationMethodIsCalledTheOrganisationIsSetToPaused()
+        // The above is... only the correct ones are returned.
+        // Returns nothing when nothing is in DB, or when nothing is available
+        // Published/Non-Published tested separatelly
+        // Date range tested separately
+
+        #endregion
+        #region Pause Organisation
+
+        [TestCase(TestName = @"
+            Given an existing organisation id,
+            When the PauseOrganisation Gateway method is called,
+            Then the organisation's status is set to Paused")]
+        public void OrganisationIsPausedWhenAMethodIsCalledWithAnExistingId()
         {
+            // arrange
             var organisation = EntityHelpers.CreateOrganisation();
             DatabaseContext.Add(organisation);
             DatabaseContext.SaveChanges();
+
+            // act
             var result = _classUnderTest.PauseOrganisation(organisation.Id);
+
+            // assert
             result.Status.Should().Be("Paused");
         }
+
+        // Given non-existing organisation Id, method throws RecordNotFoundException
+        // + See into the returns of the method
+
+        #endregion
+        #region Flag: In Revalidation
 
         [TestCase(TestName = @"
             Given an organisation id of existing organisation, 
@@ -119,5 +166,7 @@ namespace LbhFssStepFunction.Tests.V1.Gateways
             // assert
             testMethodCall.Should().Throw<ResourceNotFoundException>();
         }
+
+        # endregion
     }
 }
