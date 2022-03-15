@@ -73,7 +73,6 @@ namespace LbhFssStepFunction.Tests.V1.Gateways
         #endregion
         #region Get Multiple Organisations
         
-        // Date range tested separately
         [TestCase(TestName = @"
             Given the Database contains Organisations with expired data (t > 1y old),
             When the GetOrganisationsToReview Gateway method is called,
@@ -122,7 +121,6 @@ namespace LbhFssStepFunction.Tests.V1.Gateways
             });
         }
 
-        // Published/Non-Published tested separatelly
         [TestCase(TestName = @"
             Given the Database contains Organisations with expired data,
             And some of them are 'Published',
@@ -171,7 +169,6 @@ namespace LbhFssStepFunction.Tests.V1.Gateways
             });
         }
 
-        // In-Revalidation tested separatelly
         [TestCase(TestName = @"
             Given the Database contains published & expired Organisations,
             And some of them are NOT In Revalidation Process,
@@ -219,7 +216,6 @@ namespace LbhFssStepFunction.Tests.V1.Gateways
             });
         }
 
-        // Returns nothing when nothing is in DB, or when nothing is available
         [TestCase(TestName = @"
             Given the Database does NOT contain organisations that are at the same time all: Expired,
             And 'Published',
@@ -266,14 +262,35 @@ namespace LbhFssStepFunction.Tests.V1.Gateways
             DatabaseContext.SaveChanges();
 
             // act
-            var result = _classUnderTest.PauseOrganisation(organisation.Id);
+            _classUnderTest.PauseOrganisation(organisation.Id);
+
+            DatabaseContext.Entry(organisation).State = EntityState.Detached;
 
             // assert
-            result.Status.Should().Be("Paused");
+            var retrievedOrganisation = DatabaseContext.Organisations.First(o => o.Id == organisation.Id);
+            retrievedOrganisation.Status.Should().Be("Paused");
         }
 
-        // Given non-existing organisation Id, method throws RecordNotFoundException
-        // + See into the returns of the method
+        [TestCase(TestName = @"
+            Given a NOT existing organisation id,
+            When the PauseOrganisation Gateway method is called,
+            Then the execution flow terminates with ResourceNotFound exception")]
+        public void AttemptingToPauseNonExistentOrgThrowsException()
+        {
+            // arrange
+            var controlOrganisation = EntityHelpers.CreateOrganisation();
+            // test that it won't default to some random or first in the list organisation
+            DatabaseContext.Add(controlOrganisation);
+            DatabaseContext.SaveChanges();
+
+            int randomOrgId = Randomm.Id(minimum: 300);
+
+            // act
+            Action testMethodCall = () => _classUnderTest.PauseOrganisation(randomOrgId);
+
+            // assert
+            testMethodCall.Should().Throw<ResourceNotFoundException>();
+        }
 
         #endregion
         #region Flag: In Revalidation
@@ -306,9 +323,14 @@ namespace LbhFssStepFunction.Tests.V1.Gateways
             Given an organisation id of non-existent organisation,
             When the FlagOrganisationToBeInRevalidation Gateway method is called,
             Then the execution flow terminates with ResourceNotFound exception")]
-        public void AttemptinToUpdateNonExistentOrgThrowsAnException()
+        public void AttemptingToUpdateNonExistentOrgThrowsAnException()
         {
             // arrange
+            var controlOrganisation = EntityHelpers.CreateOrganisation();
+            // test that it won't default to some random or first in the list organisation
+            DatabaseContext.Add(controlOrganisation);
+            DatabaseContext.SaveChanges();
+
             int randomOrgId = Randomm.Id(100, 200);
 
             // act

@@ -55,10 +55,15 @@ namespace LbhFssStepFunction.V1.Gateways
 
         public OrganisationDomain PauseOrganisation(int id)
         {
-            var orgToPause = _context.Organisations.Find(id);
-            orgToPause.Status = "Paused";
-            _context.Organisations.Attach(orgToPause);
+            var organisationToPause = _context.Organisations.Find(id);
+
+            if (organisationToPause == null)
+                throw new ResourceNotFoundException($"Organisation with id={id} was not found.");
+
+            organisationToPause.Status = "Paused";
+            // _context.Organisations.Attach(organisationToPause);
             _context.SaveChanges();
+
             var org = _context.Organisations.Find(id);
             return org.ToDomain();
         }
