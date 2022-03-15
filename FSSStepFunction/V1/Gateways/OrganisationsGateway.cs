@@ -46,7 +46,7 @@ namespace LbhFssStepFunction.V1.Gateways
         {
             var orgsToReview = _context.Organisations
                 .Where(x => x.LastRevalidation < DateTime.Today.AddDays(-365))
-                .Where(x => x.InRevalidationProcess == false)
+                .Where(x => !x.InRevalidationProcess)
                 .Where(x => x.Status.ToLower() == "published")
                 .Select(org => org.ToDomain())
                 .ToList();

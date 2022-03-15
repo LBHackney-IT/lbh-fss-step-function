@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using LbhFssStepFunction.Tests.TestHelpers;
 using LbhFssStepFunction.V1.Gateways;
@@ -6,6 +7,7 @@ using NUnit.Framework;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using LbhFssStepFunction.V1.Errors;
+using LbhFssStepFunction.V1.Domains;
 
 namespace LbhFssStepFunction.Tests.V1.Gateways
 {
@@ -48,7 +50,6 @@ namespace LbhFssStepFunction.Tests.V1.Gateways
             });
         }
 
-        // Not found... return null
         [TestCase(TestName = @"
             Given a NOT existing organisation id,
             When the GetOrganisationById Gateway method is called,
@@ -71,55 +72,184 @@ namespace LbhFssStepFunction.Tests.V1.Gateways
 
         #endregion
         #region Get Multiple Organisations
-
+        
+        // Date range tested separately
         [TestCase(TestName = @"
-            Given organisations in the db up for review,
-            When the gateway is called,
-            Then these organisations are returned")]
-        public void GivenOrganisationAreUpForReviewGetOrganisationsToReviewReturnsTheseOrganisations()
+            Given the Database contains Organisations with expired data (t > 1y old),
+            When the GetOrganisationsToReview Gateway method is called,
+            Then it returns ONLY organisations that have expired.")]
+        public void GetOrganisationsToReviewReturnsOrganisationInCorrectDateRange()
         {
             // arrange
-            var organisations = EntityHelpers.CreateOrganisations(10).ToList();
+            var testOrganisations = EntityHelpers.CreateOrganisations().ToList();
+            testOrganisations.ForEach(o => {
+                // Setting other filtering related properties as constant to isolate date filter testing.
+                o.InRevalidationProcess = false;
+                o.Status = "Published";
+                // 365th day is the last allowed day, hence should be ignored.
+                // The implementation does not concern itself with precision when it comes to leap year.
+                // Method should work even when Org. data has expired close to 2years ago 
+                // (current state of some of the data at the time of this commit)
+                o.LastRevalidation = DateTime.Today.AddDays(Randomm.Int(-720, -366));
+            });
 
-            // TODO: rewrite this to be more concise
-            organisations[0].Status = "Published";
-            organisations[0].LastRevalidation = DateTime.Today.AddDays(-370);
-            organisations[0].InRevalidationProcess = false;
-            organisations[1].Status = "Published";
-            organisations[1].LastRevalidation = DateTime.Today.AddDays(-375);
-            organisations[1].InRevalidationProcess = false;
-            organisations[2].Status = "Published";
-            organisations[2].LastRevalidation = DateTime.Today.AddDays(-380);
-            organisations[2].InRevalidationProcess = false;
-            organisations[3].Status = "Paused";
-            organisations[3].LastRevalidation = DateTime.Today.AddDays(-370);
-            organisations[3].InRevalidationProcess = false;
-            organisations[4].Status = "Published";
-            organisations[4].LastRevalidation = DateTime.Today.AddDays(-340);
-            organisations[4].InRevalidationProcess = false;
-            organisations[5].Status = "Published";
-            organisations[5].LastRevalidation = DateTime.Today.AddDays(-370);
-            organisations[5].InRevalidationProcess = true;
-            DatabaseContext.AddRange(organisations);
+            var controlOrganisations = EntityHelpers.CreateOrganisations(10).ToList();
+            controlOrganisations.ForEach(o => {
+                // Ensuring control Orgs. don't clash with the test ones for the purposes of the test.
+                o.LastRevalidation = DateTime.Today.AddDays(Randomm.Int(-365, 0));
+                // Setting these properties like this should show that the Date range is independent
+                // of these other filter parameters.
+                o.InRevalidationProcess = Randomm.EqualChanceItems(false, true);
+                o.Status = Randomm.EqualChanceItems("Published", "Paused", "Awaiting Review", "Rejected");
+            });
+
+            var organisationsPool = testOrganisations.Concat(controlOrganisations).ToList();
+            DatabaseContext.AddRange(organisationsPool);
             DatabaseContext.SaveChanges();
 
+            organisationsPool.ForEach(
+                o => DatabaseContext.Entry(o).State = EntityState.Detached);
+
             // act
-            var gatewayResult = _classUnderTest.GetOrganisationsToReview();
+            var expiredOrgsList = _classUnderTest.GetOrganisationsToReview();
 
             // assert
-            gatewayResult.Count.Should().Be(3);
-            var expectedResult = organisations.Take(3);
-            gatewayResult.Should().BeEquivalentTo(expectedResult, options =>
+            expiredOrgsList.Should().HaveCount(3);
+            expiredOrgsList.Should().BeEquivalentTo(testOrganisations, options =>
             {
                 options.Excluding(ex => ex.UserOrganisations);
                 return options;
             });
         }
 
-        // The above is... only the correct ones are returned.
-        // Returns nothing when nothing is in DB, or when nothing is available
         // Published/Non-Published tested separatelly
-        // Date range tested separately
+        [TestCase(TestName = @"
+            Given the Database contains Organisations with expired data,
+            And some of them are 'Published',
+            When the GetOrganisationsToReview Gateway method is called,
+            Then it returns expired organisations ONLY if they're Published.")]
+        public void GetOrganisationsToReviewReturnsOnlyPublishedExpiredOrganisations()
+        {
+            // arrange
+            var testOrganisations = EntityHelpers.CreateOrganisations(4).ToList();
+            testOrganisations.ForEach(o => {
+                // Setting other filtering related properties as constant to isolate organisation status testing.
+                o.InRevalidationProcess = false;
+                o.LastRevalidation = DateTime.Today.AddDays(Randomm.Int(-1000, -366));
+                // Organisation has to be "Published" - effectively means it was validated to be real
+                // by Hackney staff. If it wasn't validated to be real, there's no point to re-verify anything.
+                o.Status = "Published";
+            });
+
+            var controlOrganisations = EntityHelpers.CreateOrganisations(10).ToList();
+            controlOrganisations.ForEach(o => {
+                // Ensuring control Orgs. don't clash with the test ones for the purposes of the test.
+                // Status has to be anything but "Published", doesn't even matter if it's a real value or not. 
+                o.Status = Randomm.EqualChanceItems("Paused", "Awaiting Review", "Rejected");
+                // Setting these other parameters as random to test that organisation status filtering is
+                // independent of other filter parameters.
+                o.InRevalidationProcess = Randomm.EqualChanceItems(false, true);
+                o.LastRevalidation = DateTime.Today.AddDays(Randomm.Int(-720, 0));
+            });
+
+            var organisationsPool = testOrganisations.Concat(controlOrganisations).ToList();
+            DatabaseContext.AddRange(organisationsPool);
+            DatabaseContext.SaveChanges();
+
+            organisationsPool.ForEach(
+                o => DatabaseContext.Entry(o).State = EntityState.Detached);
+
+            // act
+            var expiredOrgsList = _classUnderTest.GetOrganisationsToReview();
+
+            // assert
+            expiredOrgsList.Should().HaveCount(4);
+            expiredOrgsList.Should().BeEquivalentTo(testOrganisations, options =>
+            {
+                options.Excluding(ex => ex.UserOrganisations);
+                return options;
+            });
+        }
+
+        // In-Revalidation tested separatelly
+        [TestCase(TestName = @"
+            Given the Database contains published & expired Organisations,
+            And some of them are NOT In Revalidation Process,
+            When the GetOrganisationsToReview Gateway method is called,
+            Then it returns ONLY the published, expired organisations that are NOT InRevalidation process")]
+        public void GetOrganisationsToReviewReturnsOnlyOrganisationsThatAreNotYetInRevalidation()
+        {
+            var testOrganisations = EntityHelpers.CreateOrganisations(2).ToList();
+            testOrganisations.ForEach(o => {
+                // Setting other filtering related properties as constant to isolate organisation in-revalidation filter testing.
+                o.LastRevalidation = DateTime.Today.AddDays(Randomm.Int(-1000, -366));
+                o.Status = "Published";
+                // Organisation has to NOT be in Revalidation process already, if it is then it in revalidation process,
+                // then it means that the Step function has already triggered the process for the organisation.
+                // No need to do it twice.
+                o.InRevalidationProcess = false;
+            });
+
+            var controlOrganisations = EntityHelpers.CreateOrganisations(10).ToList();
+            controlOrganisations.ForEach(o => {
+                // Ensuring control Orgs. don't clash with the test ones for the purposes of the test.
+                o.InRevalidationProcess = true;
+                // Setting these other parameters as random to test that organisation in revalidation
+                // filtering is independent of other filter parameters.
+                o.LastRevalidation = DateTime.Today.AddDays(Randomm.Int(-720, 0));
+                o.Status = Randomm.EqualChanceItems("Published", "Paused", "Awaiting Review", "Rejected");
+            });
+
+            var organisationsPool = testOrganisations.Concat(controlOrganisations).ToList();
+            DatabaseContext.AddRange(organisationsPool);
+            DatabaseContext.SaveChanges();
+
+            organisationsPool.ForEach(
+                o => DatabaseContext.Entry(o).State = EntityState.Detached);
+
+            // act
+            var expiredOrgsList = _classUnderTest.GetOrganisationsToReview();
+
+            // assert
+            expiredOrgsList.Should().HaveCount(2);
+            expiredOrgsList.Should().BeEquivalentTo(testOrganisations, options =>
+            {
+                options.Excluding(ex => ex.UserOrganisations);
+                return options;
+            });
+        }
+
+        // Returns nothing when nothing is in DB, or when nothing is available
+        [TestCase(TestName = @"
+            Given the Database does NOT contain organisations that are at the same time all: Expired,
+            And 'Published',
+            And NOT in Revalidation,
+            When GetOrganisationsToReview Gateway method is called,
+            Then it returns an EMPTY collection.")]
+        public void GetOrganisationsToReviewReturnsEmptyCollectionWhenOrganisationsWithMatchingCriteriaAreNotFound()
+        {
+            // arrange
+            var controlOrganisations = EntityHelpers.CreateOrganisations(10).ToList();
+            controlOrganisations.ForEach(o => {
+                // At this point, the test is in showing that EMPTY collection gets returned when there is NO
+                // match at all (unlike previous tests). The setting of all 3 of these fields as invalid 
+                // is just a symbollic gesture to make the point of the test come accross better.
+                // Also due to these being non-matching entities, there's no need to do entity tracker setup.
+                o.Status = Randomm.EqualChanceItems("Paused", "Awaiting Review", "Rejected");
+                o.InRevalidationProcess = true;
+                o.LastRevalidation = DateTime.Today.AddDays(Randomm.Int(-365, 0));
+            });
+
+            DatabaseContext.AddRange(controlOrganisations);
+            DatabaseContext.SaveChanges();
+
+            // act
+            var expiredOrgsList = _classUnderTest.GetOrganisationsToReview();
+
+            // assert
+            expiredOrgsList.Should().NotBeNull();
+            expiredOrgsList.Should().BeEmpty();
+        }
 
         #endregion
         #region Pause Organisation
