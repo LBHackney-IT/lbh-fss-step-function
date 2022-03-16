@@ -53,7 +53,7 @@ namespace LbhFssStepFunction.V1.Gateways
             return orgsToReview;
         }
 
-        public OrganisationDomain PauseOrganisation(int id)
+        public void PauseOrganisation(int id)
         {
             var organisationToPause = _context.Organisations.Find(id);
 
@@ -63,9 +63,6 @@ namespace LbhFssStepFunction.V1.Gateways
             organisationToPause.Status = "Paused";
             // _context.Organisations.Attach(organisationToPause);
             _context.SaveChanges();
-
-            var org = _context.Organisations.Find(id);
-            return org.ToDomain();
         }
 
         public void FlagOrganisationToBeInRevalidation(int id)

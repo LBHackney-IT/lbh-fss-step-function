@@ -43,7 +43,6 @@ namespace LbhFssStepFunction.Tests.V1.UseCase
         {
             var organisation = EntityHelpers.CreateOrganisation();
             _mockOrganisationGateway.Setup(og => og.GetOrganisationById(It.IsAny<int>())).Returns(organisation.ToDomain());
-            _mockOrganisationGateway.Setup(og => og.PauseOrganisation(It.IsAny<int>())).Returns(organisation.ToDomain());
             _classUnderTest.GetOrganisationAndSendEmail(1);
             _mockNotifyGateway.Verify(gw => gw.SendNotificationEmail(It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<int>()), Times.Once);
         }

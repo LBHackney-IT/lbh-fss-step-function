@@ -23,10 +23,10 @@ namespace LbhFssStepFunction.V1.UseCase
             var org = _organisationsGateway.GetOrganisationById(id);
             if (org == null)
                 return null;
-            var updatedOrg = _organisationsGateway.PauseOrganisation(org.Id);
-            if (updatedOrg == null)
-                return null;
-            var organisation = updatedOrg.ToResponse();
+            
+            _organisationsGateway.PauseOrganisation(org.Id);
+
+            var organisation = org.ToResponse();
             await _notifyGateway.SendNotificationEmail(organisation.OrganisationName, organisation.EmailAddresses.ToArray(), 4).ConfigureAwait(true);
             return organisation;
         }
