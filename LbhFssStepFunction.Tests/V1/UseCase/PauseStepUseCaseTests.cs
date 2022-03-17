@@ -159,6 +159,7 @@ namespace LbhFssStepFunction.Tests.V1.UseCase
             Given a NOT existing Organisation Id,
             When the Pause Step Usecase gets called,
             Then it does NOT call SendNotfication notify gateway's method,
+            And it does NOT call PauseOrganisation organisation gateway's method,
             And it returns a NULL result.")]
         public async Task PauseStepUCDoesNotCallNotifyGWAndReturnsNullWhenOrganisationIsNotFound()
         {
@@ -180,6 +181,10 @@ namespace LbhFssStepFunction.Tests.V1.UseCase
                     It.IsAny<string>(),
                     It.IsAny<string[]>(),
                     It.IsAny<int>()),
+                Times.Never);
+
+            _mockOrganisationGateway.Verify(
+                gw => gw.PauseOrganisation(It.IsAny<int>()),
                 Times.Never);
             
             ucResult.Should().BeNull();
@@ -223,7 +228,6 @@ namespace LbhFssStepFunction.Tests.V1.UseCase
             ucCall.Should().Throw<ResourceNotFoundException>().WithMessage("Error");
             // Throw exception back to ensure that retry is scheduled.
         }
-
         // There should also be logging tests, however this would be going too far in terms of the ticket work
     }
 }
