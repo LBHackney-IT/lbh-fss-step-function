@@ -6,6 +6,7 @@ using LbhFssStepFunction.Tests.TestHelpers;
 using LbhFssStepFunction.V1.Domains;
 using LbhFssStepFunction.V1.Factories;
 using LbhFssStepFunction.V1.Gateways.Interface;
+using LbhFssStepFunction.V1.Helpers;
 using LbhFssStepFunction.V1.UseCase;
 using Moq;
 using NUnit.Framework;
@@ -55,7 +56,8 @@ namespace LbhFssStepFunction.Tests.V1.UseCase
         public async Task ThirdStepUseCaseCallsNotificationGatewayWithCorrectParamsIfOrganisationWasNotUpdated()
         {
             // arrange
-            int waitDuration = Int32.Parse(Environment.GetEnvironmentVariable("WAIT_DURATION"));
+            string waitDuration = Environment.GetEnvironmentVariable("WAIT_DURATION");
+            var expectedScheduledDate = SharedUtils.WaitTimeToDate(waitDuration);
 
             int existingId = Randomm.Id();
             var organisation = EntityHelpers.CreateOrganisationWithUsers(activeUsers: true);
@@ -85,7 +87,7 @@ namespace LbhFssStepFunction.Tests.V1.UseCase
             ucResult.Should().NotBeNull();
             ucResult.EmailAddresses.Should().BeEquivalentTo(emails);
             // Next step time should be ±2 seconds from the time the UC was executed. Should be accurate enough for testing purposes.
-            ucResult.NextStepTime.Should().BeCloseTo(DateTime.Now.AddSeconds(waitDuration), precision: 2000);
+            ucResult.NextStepTime.Should().BeCloseTo(expectedScheduledDate, precision: 2000);
             ucResult.StateResult.Should().BeTrue();
             ucResult.OrganisationId.Should().Be(existingId); // the rest of the organisations data is irrelevant.
         }

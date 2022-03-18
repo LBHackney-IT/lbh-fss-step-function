@@ -4,6 +4,7 @@ using LbhFssStepFunction.V1.Factories;
 using LbhFssStepFunction.V1.Gateways;
 using LbhFssStepFunction.V1.Gateways.Interface;
 using LbhFssStepFunction.V1.Handlers;
+using LbhFssStepFunction.V1.Helpers;
 using LbhFssStepFunction.V1.UseCase.Interface;
 
 namespace LbhFssStepFunction.V1.UseCase
@@ -47,8 +48,7 @@ namespace LbhFssStepFunction.V1.UseCase
 
                 organisationResponse.StateResult = true;
 
-                DateTime nextRunDate = DateTime.Now.AddSeconds(Int32.Parse(_waitDuration));
-                //ToDo: Change AddSeconds to AddDays
+                DateTime nextRunDate = SharedUtils.WaitTimeToDate(_waitDuration);
                 organisationResponse.NextStepTime = nextRunDate;
                 
                 LoggingHandler.LogInfo($"Step 3 is scheduled at: {string.Concat(nextRunDate.ToString("s"), "Z")}.");
