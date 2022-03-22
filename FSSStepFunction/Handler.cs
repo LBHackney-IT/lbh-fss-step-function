@@ -14,8 +14,6 @@ namespace LbhFssStepFunction
         private readonly IStartFunctionUseCase _startFunctionUseCase;
         private readonly IFirstStepUseCase _firstStepUseCase;
         private readonly IReminderToReminderUseCase _reminderToReminderUC;
-        private readonly ISecondStepUseCase _secondStepUseCase;
-        private readonly IThirdStepUseCase _thirdStepUseCase;
         private readonly IPauseStepUseCase _pauseStepUseCase;
 
         public Handler()
@@ -23,8 +21,6 @@ namespace LbhFssStepFunction
             _startFunctionUseCase = new StartFunctionUseCase();
             _firstStepUseCase = new FirstStepUseCase();
             _reminderToReminderUC = new ReminderToReminderUseCase();
-            _secondStepUseCase = new SecondStepUseCase();
-            _thirdStepUseCase = new ThirdStepUseCase();
             _pauseStepUseCase = new PauseStepUseCase();
         }
 
@@ -41,8 +37,6 @@ namespace LbhFssStepFunction
             _startFunctionUseCase = startFunctionUseCase ?? new StartFunctionUseCase();
             _firstStepUseCase = firstStepUseCase ?? new FirstStepUseCase();
             _reminderToReminderUC = reminderToReminderUC ?? new ReminderToReminderUseCase();
-            _secondStepUseCase = secondStepUseCase ?? new SecondStepUseCase();
-            _thirdStepUseCase = thirdStepUseCase ?? new ThirdStepUseCase();
             _pauseStepUseCase = pauseStepUseCase ?? new PauseStepUseCase();
         }
 
@@ -74,6 +68,5 @@ namespace LbhFssStepFunction
         {
             return await _pauseStepUseCase.GetOrganisationAndSendEmail(request.OrganisationId).ConfigureAwait(true);
         }
-
     }
 }
