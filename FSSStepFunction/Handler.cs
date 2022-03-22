@@ -40,10 +40,10 @@ namespace LbhFssStepFunction
             _pauseStepUseCase = pauseStepUseCase ?? new PauseStepUseCase();
         }
 
-        public void StartFunction()
+        public async Task StartFunction()
         {
             LoggingHandler.LogInfo("Organisation review scheduled job started");
-            _startFunctionUseCase.Execute();
+            await _startFunctionUseCase.Execute();
         }
         public async Task<OrganisationResponse> FirstStep(OrganisationRequest request)
         {

@@ -24,7 +24,7 @@ namespace LbhFssStepFunction.V1.UseCase
             _organisationsGateway = gateway ?? new OrganisationsGateway();
         }
 
-        public void Execute()
+        public async Task Execute()
         {
             LoggingHandler.LogInfo("Executing request to gateway to get organisations up for review");
             var organisations = _organisationsGateway.GetOrganisationsToReview();
@@ -51,8 +51,7 @@ namespace LbhFssStepFunction.V1.UseCase
                             $"Initiating state machine for organisation {organisation.Name}");
                         try
                         {
-                            amazonStepFunctionsClient.StartExecutionAsync(startExecutionRequest)
-                                .ConfigureAwait(false).GetAwaiter().GetResult();
+                            await amazonStepFunctionsClient.StartExecutionAsync(startExecutionRequest);
                         }
                         catch (Exception e)
                         {
