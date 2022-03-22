@@ -83,7 +83,7 @@ namespace LbhFssStepFunction.Tests
             Then it calls the Reminder To Reminder use case's GetOrganisationAndSendEmail method,
             And passes in the correct parameters,
             Then the handler function returns correct response.")]
-        public async Task SecondStepHandlerCallsSecondStepUseCase()
+        public async Task SecondStepHandlerCallsSecondStepUseCaseHappyPath()
         {
             // arrange
             int expectedStepNumber = 2;
@@ -140,25 +140,71 @@ namespace LbhFssStepFunction.Tests
         }
         
         #endregion
+        #region Third Step
 
-        [TestCase(TestName = "Given that the third step function gets called, it calls the third step use case GetOrganisationAndSendEmail method.")]
-        public void ThirdStepHandlerCallsThirdStepUseCase()
+        [TestCase(TestName = @"
+            Given a valid Organisation Id,
+            When the Handler's Step 3 function gets called,
+            Then it calls the Reminder To Reminder use case's GetOrganisationAndSendEmail method,
+            And passes in the correct parameters,
+            Then the handler function returns correct response.")]
+        public async Task ThirdStepHandlerCallsThirdStepUseCaseHappyPath()
         {
-            var request = _fixture.Create<OrganisationRequest>();
-            _classUnderTest.ThirdStep(request);
-            _mockThirdStepUseCase.Verify(uc =>
-                uc.GetOrganisationAndSendEmail(It.Is<int>(x => x == request.OrganisationId)), Times.Once);
+            // arrange
+            int expectedStepNumber = 3;
+            
+            var request = Randomm.Create<OrganisationRequest>();
+            var ucResponse = Randomm
+                .Build<OrganisationResponse>()
+                .With(o => o.OrganisationId, request.OrganisationId)
+                .Create();
+
+            _mockReminderToReminderUC
+                .Setup(uc =>
+                    uc.GetOrganisationAndSendEmail(
+                        It.Is<int>(id => id == request.OrganisationId),
+                        It.IsAny<int>()))
+                .ReturnsAsync(ucResponse);
+
+            // act
+            var handlerResult = await _classUnderTest.ThirdStep(request);
+
+            // assert
+            _mockReminderToReminderUC.Verify(
+                uc => uc.GetOrganisationAndSendEmail(
+                    It.Is<int>(x => x == request.OrganisationId),
+                    It.Is<int>(step => step == expectedStepNumber)),
+                Times.Once);
+            
+            handlerResult.Should().Equals(ucResponse); // should be the same object reference
         }
 
-        [TestCase(TestName = "Given that the third step function gets called with a valid organisation id, it returns an Organisation Response.")]
-        public async Task ThirdStepHandlerReturnsOrganisationResponse()
+        [TestCase(TestName = @"
+            Given an invalid Organisation Id,
+            When the Handler's Step 3 function gets called,
+            And the subsequent call to Reminder To Reminder use case returns NULL result,
+            Then the handler function returns the same NULL result")]
+        public async Task ThirdStepHandlerReturnsNullWhenOrganisationDoesntExist()
         {
-            var request = _fixture.Create<OrganisationRequest>();
-            var expectedResponse = _fixture.Create<OrganisationResponse>();
-            _mockThirdStepUseCase.Setup(x => x.GetOrganisationAndSendEmail(It.IsAny<int>())).ReturnsAsync(expectedResponse);
-            var response = await _classUnderTest.ThirdStep(request);
-            response.Should().Be(expectedResponse);
+            // arrange
+            var request = Randomm.Create<OrganisationRequest>();
+            var ucResponse = null as OrganisationResponse;
+
+            _mockReminderToReminderUC
+                .Setup(uc =>
+                    uc.GetOrganisationAndSendEmail(
+                        It.Is<int>(id => id == request.OrganisationId),
+                        It.IsAny<int>()))
+                .ReturnsAsync(ucResponse);
+
+            // act
+            var handlerResult = await _classUnderTest.ThirdStep(request);
+
+            // assert
+            handlerResult.Should().BeNull();
         }
+
+        #endregion
 
         [TestCase(TestName = "Given that the pause step function gets called, it calls the pause step use case GetOrganisationAndSendEmail method.")]
         public void PauseStepHandlerCallsPauseStepUseCase()

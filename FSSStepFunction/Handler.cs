@@ -65,7 +65,9 @@ namespace LbhFssStepFunction
 
         public async Task<OrganisationResponse> ThirdStep(OrganisationRequest request)
         {
-            return await _thirdStepUseCase.GetOrganisationAndSendEmail(request.OrganisationId).ConfigureAwait(true);
+            return await _reminderToReminderUC
+                .GetOrganisationAndSendEmail(request.OrganisationId, 3)
+                .ConfigureAwait(true);
         }
 
         public async Task<OrganisationResponse> PauseStep(OrganisationRequest request)
