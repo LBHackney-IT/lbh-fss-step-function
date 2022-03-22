@@ -48,7 +48,7 @@ namespace LbhFssStepFunction.V1.Gateways
             {
                 for (int a = 0; a < addresses.Length; a++)
                 {
-                    await _client.SendEmailAsync(addresses[a], notifyTemplate, personalisation).ConfigureAwait(false);
+                    await _client.SendEmailAsync(addresses[a], notifyTemplate, personalisation);
                     LoggingHandler.LogInfo($"Successfully sent email to organisation recipients");
                 }
             }

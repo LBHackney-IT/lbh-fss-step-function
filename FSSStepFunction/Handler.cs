@@ -47,26 +47,24 @@ namespace LbhFssStepFunction
         }
         public async Task<OrganisationResponse> FirstStep(OrganisationRequest request)
         {
-            return await _firstStepUseCase.GetOrganisationAndSendEmail(request.OrganisationId).ConfigureAwait(true);
+            return await _firstStepUseCase.GetOrganisationAndSendEmail(request.OrganisationId);
         }
 
         public async Task<OrganisationResponse> SecondStep(OrganisationRequest request)
         {
             return await _reminderToReminderUC
-                .GetOrganisationAndSendEmail(request.OrganisationId, 2)
-                .ConfigureAwait(true);
+                .GetOrganisationAndSendEmail(request.OrganisationId, 2);
         }
 
         public async Task<OrganisationResponse> ThirdStep(OrganisationRequest request)
         {
             return await _reminderToReminderUC
-                .GetOrganisationAndSendEmail(request.OrganisationId, 3)
-                .ConfigureAwait(true);
+                .GetOrganisationAndSendEmail(request.OrganisationId, 3);
         }
 
         public async Task<OrganisationResponse> PauseStep(OrganisationRequest request)
         {
-            return await _pauseStepUseCase.GetOrganisationAndSendEmail(request.OrganisationId).ConfigureAwait(true);
+            return await _pauseStepUseCase.GetOrganisationAndSendEmail(request.OrganisationId);
         }
     }
 }

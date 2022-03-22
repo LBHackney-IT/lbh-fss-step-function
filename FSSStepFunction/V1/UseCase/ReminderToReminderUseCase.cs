@@ -46,8 +46,7 @@ namespace LbhFssStepFunction.V1.UseCase
                     .SendNotificationEmail(
                         organisationResponse.OrganisationName, 
                         organisationResponse.EmailAddresses.ToArray(), 
-                        step)
-                    .ConfigureAwait(true);
+                        step);
 
                 organisationResponse.StateResult = true;
 

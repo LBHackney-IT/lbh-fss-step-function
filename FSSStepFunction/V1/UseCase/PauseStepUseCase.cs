@@ -27,7 +27,7 @@ namespace LbhFssStepFunction.V1.UseCase
             if (updatedOrg == null)
                 return null;
             var organisation = updatedOrg.ToResponse();
-            await _notifyGateway.SendNotificationEmail(organisation.OrganisationName, organisation.EmailAddresses.ToArray(), 4).ConfigureAwait(true);
+            await _notifyGateway.SendNotificationEmail(organisation.OrganisationName, organisation.EmailAddresses.ToArray(), 4);
             return organisation;
         }
     }
