@@ -11,28 +11,36 @@ namespace LbhFssStepFunction
 {
     public class Handler
     {
+        private readonly IStartFunctionUseCase _startFunctionUseCase;
         private readonly IFirstStepUseCase _firstStepUseCase;
+        private readonly IReminderToReminderUseCase _reminderToReminderUC;
         private readonly ISecondStepUseCase _secondStepUseCase;
         private readonly IThirdStepUseCase _thirdStepUseCase;
         private readonly IPauseStepUseCase _pauseStepUseCase;
-        private readonly IStartFunctionUseCase _startFunctionUseCase;
 
         public Handler()
         {
             _startFunctionUseCase = new StartFunctionUseCase();
             _firstStepUseCase = new FirstStepUseCase();
+            _reminderToReminderUC = new ReminderToReminderUseCase();
             _secondStepUseCase = new SecondStepUseCase();
             _thirdStepUseCase = new ThirdStepUseCase();
             _pauseStepUseCase = new PauseStepUseCase();
         }
-        public Handler(IStartFunctionUseCase startFunctionUseCase = null,
-        IFirstStepUseCase firstStepUseCase = null,
-        ISecondStepUseCase secondStepUseCase = null,
-        IThirdStepUseCase thirdStepUseCase = null,
-        IPauseStepUseCase pauseStepUseCase = null)
+
+        // If we're using this constructor overload, then we don't need the above one.
+        // MAYBE TODO: Refactor this. Unless the parameterless CTOR is explicitly needed by AWS Host.
+        public Handler(
+            IStartFunctionUseCase startFunctionUseCase = null,
+            IFirstStepUseCase firstStepUseCase = null,
+            IReminderToReminderUseCase reminderToReminderUC = null,
+            ISecondStepUseCase secondStepUseCase = null,
+            IThirdStepUseCase thirdStepUseCase = null,
+            IPauseStepUseCase pauseStepUseCase = null)
         {
             _startFunctionUseCase = startFunctionUseCase ?? new StartFunctionUseCase();
             _firstStepUseCase = firstStepUseCase ?? new FirstStepUseCase();
+            _reminderToReminderUC = reminderToReminderUC ?? new ReminderToReminderUseCase();
             _secondStepUseCase = secondStepUseCase ?? new SecondStepUseCase();
             _thirdStepUseCase = thirdStepUseCase ?? new ThirdStepUseCase();
             _pauseStepUseCase = pauseStepUseCase ?? new PauseStepUseCase();
@@ -50,7 +58,9 @@ namespace LbhFssStepFunction
 
         public async Task<OrganisationResponse> SecondStep(OrganisationRequest request)
         {
-            return await _secondStepUseCase.GetOrganisationAndSendEmail(request.OrganisationId).ConfigureAwait(true);
+            return await _reminderToReminderUC
+                .GetOrganisationAndSendEmail(request.OrganisationId, 2)
+                .ConfigureAwait(true);
         }
 
         public async Task<OrganisationResponse> ThirdStep(OrganisationRequest request)
