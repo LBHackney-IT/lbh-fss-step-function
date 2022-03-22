@@ -30,8 +30,6 @@ namespace LbhFssStepFunction
             IStartFunctionUseCase startFunctionUseCase = null,
             IFirstStepUseCase firstStepUseCase = null,
             IReminderToReminderUseCase reminderToReminderUC = null,
-            ISecondStepUseCase secondStepUseCase = null,
-            IThirdStepUseCase thirdStepUseCase = null,
             IPauseStepUseCase pauseStepUseCase = null)
         {
             _startFunctionUseCase = startFunctionUseCase ?? new StartFunctionUseCase();

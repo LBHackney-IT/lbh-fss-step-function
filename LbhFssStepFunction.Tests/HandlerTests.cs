@@ -19,8 +19,6 @@ namespace LbhFssStepFunction.Tests
         private Mock<IStartFunctionUseCase> _mockStartFunctionUseCase;
         private Mock<IFirstStepUseCase> _mockFirstStepUseCase;
         private Mock<IReminderToReminderUseCase> _mockReminderToReminderUC;
-        private Mock<ISecondStepUseCase> _mockSecondStepUseCase;
-        private Mock<IThirdStepUseCase> _mockThirdStepUseCase;
         private Mock<IPauseStepUseCase> _mockPauseStepUseCase;
 
         [SetUp]
@@ -29,14 +27,10 @@ namespace LbhFssStepFunction.Tests
             _mockStartFunctionUseCase = new Mock<IStartFunctionUseCase>();
             _mockFirstStepUseCase = new Mock<IFirstStepUseCase>();
             _mockReminderToReminderUC = new Mock<IReminderToReminderUseCase>();
-            _mockSecondStepUseCase = new Mock<ISecondStepUseCase>();
-            _mockThirdStepUseCase = new Mock<IThirdStepUseCase>();
             _mockPauseStepUseCase = new Mock<IPauseStepUseCase>();
             _classUnderTest = new Handler(_mockStartFunctionUseCase.Object,
                 _mockFirstStepUseCase.Object,
                 _mockReminderToReminderUC.Object,
-                _mockSecondStepUseCase.Object,
-                _mockThirdStepUseCase.Object,
                 _mockPauseStepUseCase.Object);
         }
 
