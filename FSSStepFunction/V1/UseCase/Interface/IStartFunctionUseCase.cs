@@ -4,6 +4,6 @@ namespace LbhFssStepFunction.V1.UseCase.Interface
 {
     public interface IStartFunctionUseCase
     {
-        void Execute();
+        Task Execute();
     }
 }

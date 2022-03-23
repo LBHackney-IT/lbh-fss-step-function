@@ -5,6 +5,7 @@ using LbhFssStepFunction.V1.Factories;
 using LbhFssStepFunction.V1.Gateways;
 using LbhFssStepFunction.V1.Gateways.Interface;
 using LbhFssStepFunction.V1.Handlers;
+using LbhFssStepFunction.V1.Helpers;
 using LbhFssStepFunction.V1.UseCase.Interface;
 
 namespace LbhFssStepFunction.V1.UseCase
@@ -41,13 +42,11 @@ namespace LbhFssStepFunction.V1.UseCase
                 .SendNotificationEmail(
                     organisation.OrganisationName, 
                     organisation.EmailAddresses.ToArray(),
-                    1)
-                .ConfigureAwait(true);
-                
+                    1);
+
             organisation.StateResult = true;
             
-            //ToDo: Change AddSeconds to AddDays
-            organisation.NextStepTime = DateTime.Now.AddSeconds(Int32.Parse(_waitDuration));
+            organisation.NextStepTime = SharedUtils.WaitTimeToDate(_waitDuration);
             return organisation;
         }
     }

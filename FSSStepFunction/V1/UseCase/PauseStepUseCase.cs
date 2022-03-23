@@ -22,7 +22,7 @@ namespace LbhFssStepFunction.V1.UseCase
         public async Task<OrganisationResponse> GetOrganisationAndSendEmail(int id)
         {
             try {
-                LoggingHandler.LogInfo("Second step executing request to gateway to get organisation");
+                LoggingHandler.LogInfo("Pause step executing request to gateway to get organisation");
             
                 var organisation = _organisationsGateway.GetOrganisationById(id);
                 
@@ -47,8 +47,7 @@ namespace LbhFssStepFunction.V1.UseCase
                         .SendNotificationEmail(
                             response.OrganisationName,
                             response.EmailAddresses.ToArray(),
-                            4)
-                        .ConfigureAwait(true);
+                            4);
 
                     LoggingHandler.LogInfo($"Organisation with id={id} was paused, exiting Pause Step use case");
 
