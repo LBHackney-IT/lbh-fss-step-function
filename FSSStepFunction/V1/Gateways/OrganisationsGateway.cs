@@ -46,21 +46,23 @@ namespace LbhFssStepFunction.V1.Gateways
         {
             var orgsToReview = _context.Organisations
                 .Where(x => x.LastRevalidation < DateTime.Today.AddDays(-365))
-                .Where(x => x.InRevalidationProcess == false)
+                .Where(x => !x.InRevalidationProcess)
                 .Where(x => x.Status.ToLower() == "published")
                 .Select(org => org.ToDomain())
                 .ToList();
             return orgsToReview;
         }
 
-        public OrganisationDomain PauseOrganisation(int id)
+        public void PauseOrganisation(int id)
         {
-            var orgToPause = _context.Organisations.Find(id);
-            orgToPause.Status = "Paused";
-            _context.Organisations.Attach(orgToPause);
+            var organisationToPause = _context.Organisations.Find(id);
+
+            if (organisationToPause == null)
+                throw new ResourceNotFoundException($"Organisation with id={id} was not found.");
+
+            organisationToPause.Status = "Paused";
+            // _context.Organisations.Attach(organisationToPause);
             _context.SaveChanges();
-            var org = _context.Organisations.Find(id);
-            return org.ToDomain();
         }
 
         public void FlagOrganisationToBeInRevalidation(int id)

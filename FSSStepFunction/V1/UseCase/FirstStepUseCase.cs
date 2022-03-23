@@ -37,7 +37,13 @@ namespace LbhFssStepFunction.V1.UseCase
             var organisationDomain = _organisationsGateway.GetOrganisationById(id);
             var organisation = organisationDomain.ToResponse();
 
-            await _notifyGateway.SendNotificationEmail(organisation.OrganisationName, organisation.EmailAddresses.ToArray(), 1).ConfigureAwait(true);
+            await _notifyGateway
+                .SendNotificationEmail(
+                    organisation.OrganisationName, 
+                    organisation.EmailAddresses.ToArray(),
+                    1)
+                .ConfigureAwait(true);
+                
             organisation.StateResult = true;
             
             //ToDo: Change AddSeconds to AddDays

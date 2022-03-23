@@ -23,6 +23,16 @@ namespace LbhFssStepFunction.Tests.TestHelpers
         {
             return _faker.Random.Int(minimum, maximum);
         }
+        public static int Int(
+            int minimum = int.MinValue,
+            int maximum = int.MaxValue)
+        {
+            return _faker.Random.Int(minimum, maximum);
+        }
+        public static T EqualChanceItems<T>(params T[] possibilities)
+        {
+            return possibilities[Int(0, possibilities.Length - 1)];
+        }
         public static string Word()
         {
             return _faker.Random.Word();
