@@ -76,17 +76,17 @@ jobs:
 #      - run:
 #          name: Run formatter check
 #          command: ./dotnet-format-local/dotnet-format --dry-run
-  #  build-and-test:
-  #    executor: docker-python
-  #    steps:
-  #      - checkout
-  #      - setup_remote_docker
-  #      - run:
-  #          name: build
-  #          command: docker-compose build lbh-fss-portal-api-test
-  #      - run:
-  #          name: Run tests
-  #          command: docker-compose run lbh-fss-portal-api-test
+   build-and-test:
+     executor: docker-python
+     steps:
+       - checkout
+       - setup_remote_docker
+       - run:
+           name: build
+           command: docker-compose build lbh-fss-portal-api-test
+       - run:
+           name: Run tests
+           command: docker-compose run lbh-fss-portal-api-test
   assume-role-development:
     executor: docker-python
     steps:
@@ -125,14 +125,14 @@ workflows:
         filters:
           branches:
             ignore: master
-      #      - build-and-test:
-      #        filters:
-      #          branches:
-      #            ignore: master
+      - build-and-test:
+        filters:
+          branches:
+            ignore: master
       - assume-role-development:
           context: api-assume-role-development-context
-          #          requires:
-          #            - build-and-test
+          requires:
+            - build-and-test
           filters:
             branches:
               ignore: master
