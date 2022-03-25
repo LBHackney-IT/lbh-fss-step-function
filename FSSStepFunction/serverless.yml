@@ -3,10 +3,8 @@ provider:
   name: aws
   runtime: dotnetcore3.1
   timeout: 30
-  #vpc: ${self:custom.vpc.${opt:stage}}
-  #stage: ${opt:stage}
-  vpc: ${self:custom.vpc.development}
-  stage: development
+  vpc: ${self:custom.vpc.${opt:stage}}
+  stage: ${opt:stage}
   region: eu-west-2
   environment:
     CONNECTION_STRING: Host=${ssm:/fss-public-api/${self:provider.stage}/postgres-hostname};Port=${ssm:/fss-public-api/${self:provider.stage}/postgres-port};Database=${ssm:/fss-public-api/${self:provider.stage}/postgres-database};Username=${ssm:/fss-public-api/${self:provider.stage}/postgres-username};Password=${ssm:/fss-public-api/${self:provider.stage}/postgres-password}
