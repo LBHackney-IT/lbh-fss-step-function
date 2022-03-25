@@ -132,13 +132,13 @@ workflows:
             - build-and-test
           filters:
             branches:
-              ignore: master
+              only: develop
       - deploy-to-development:
           requires:
             - assume-role-development
           filters:
             branches:
-              ignore: master
+              only: develop
   check-and-deploy-staging-and-production:
     jobs:
       - build-and-test:
