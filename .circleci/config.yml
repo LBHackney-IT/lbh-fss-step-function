@@ -83,7 +83,7 @@ jobs:
       - setup_remote_docker
       - run:
           name: Run tests
-          command: make test
+          command: make test-cci
   assume-role-development:
     executor: docker-python
     steps:
