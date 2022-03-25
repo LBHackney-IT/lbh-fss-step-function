@@ -12,8 +12,8 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=mypassword
       - DB_DATABASE=testdb
-#    links:
-#      - test-database
+    links:
+      - test-database
   test-database:
     image: test-database
     build:

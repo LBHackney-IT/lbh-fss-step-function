@@ -23,7 +23,7 @@ namespace LbhFssStepFunction.Tests.V1.UseCase
         [SetUp]
         public void Setup()
         {
-            Environment.SetEnvironmentVariable("WAIT_DURATION", "600");
+            Environment.SetEnvironmentVariable("WAIT_DURATION", "10.5");
             _mockOrganisationGateway = new Mock<IOrganisationsGateway>();
             _mockNotifyGateway = new Mock<INotifyGateway>();
             _classUnderTest = new FirstStepUseCase(_mockOrganisationGateway.Object, _mockNotifyGateway.Object);
@@ -60,7 +60,7 @@ namespace LbhFssStepFunction.Tests.V1.UseCase
         public async Task FirstStepUseCaseCallsNotificationGateway()
         {
             // arrange
-            int waitDuration = Int32.Parse(Environment.GetEnvironmentVariable("WAIT_DURATION"));
+            double waitDuration = Double.Parse(Environment.GetEnvironmentVariable("WAIT_DURATION"));
             var organisation = EntityHelpers.CreateOrganisationWithUsers(withIds: true, activeUsers: true).ToDomain();
             int existingId = organisation.Id;
 
@@ -86,7 +86,7 @@ namespace LbhFssStepFunction.Tests.V1.UseCase
             ucResult.Should().NotBeNull(); // If it's NULL crash right away
             ucResult.EmailAddresses.Should().BeEquivalentTo(emailArgs);
             // Next step time should be ±2 seconds from the time the UC was executed.
-            ucResult.NextStepTime.Should().BeCloseTo(DateTime.Now.AddSeconds(waitDuration), precision: 2000);
+            ucResult.NextStepTime.Should().BeCloseTo(DateTime.Now.AddDays(waitDuration), precision: 2000);
             ucResult.StateResult.Should().BeTrue();
             ucResult.OrganisationId.Should().Be(existingId);
         }

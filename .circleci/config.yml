@@ -66,27 +66,24 @@ commands:
             sls deploy --stage <<parameters.stage>>
 
 jobs:
-  check-code-formatting:
-    executor: docker-dotnet
+  # check-code-formatting:
+  #   executor: docker-dotnet
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Install dotnet format
+  #         command: dotnet tool install dotnet-format --tool-path ./dotnet-format-local/
+  #     - run:
+  #         name: Run formatter check
+  #         command: ./dotnet-format-local/dotnet-format --dry-run
+  build-and-test:
+    executor: docker-python
     steps:
       - checkout
-#      - run:
-#          name: Install dotnet format
-#          command: dotnet tool install dotnet-format --tool-path ./dotnet-format-local/
-#      - run:
-#          name: Run formatter check
-#          command: ./dotnet-format-local/dotnet-format --dry-run
-  #  build-and-test:
-  #    executor: docker-python
-  #    steps:
-  #      - checkout
-  #      - setup_remote_docker
-  #      - run:
-  #          name: build
-  #          command: docker-compose build lbh-fss-portal-api-test
-  #      - run:
-  #          name: Run tests
-  #          command: docker-compose run lbh-fss-portal-api-test
+      - setup_remote_docker
+      - run:
+          name: Run tests
+          command: make test-cci
   assume-role-development:
     executor: docker-python
     steps:
@@ -121,18 +118,18 @@ jobs:
 workflows:
   check-and-deploy-development:
     jobs:
-      - check-code-formatting:
+      # - check-code-formatting:
+      #   filters:
+      #     branches:
+      #       ignore: master
+      - build-and-test:
         filters:
           branches:
             ignore: master
-      #      - build-and-test:
-      #        filters:
-      #          branches:
-      #            ignore: master
       - assume-role-development:
           context: api-assume-role-development-context
-          #          requires:
-          #            - build-and-test
+          requires:
+            - build-and-test
           filters:
             branches:
               ignore: master
@@ -144,14 +141,14 @@ workflows:
               ignore: master
   check-and-deploy-staging-and-production:
     jobs:
-      #      - build-and-test:
-      #          filters:
-      #            branches:
-      #              only: master
+      - build-and-test:
+          filters:
+            branches:
+              only: master
       - assume-role-staging:
           context: api-assume-role-staging-context
-          #          requires:
-          #            - build-and-test
+          requires:
+            - build-and-test
           filters:
             branches:
               only: master

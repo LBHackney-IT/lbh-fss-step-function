@@ -11,8 +11,8 @@ namespace LbhFssStepFunction.V1.Helpers
                     message: $"The wait time string was not provided, or provided empty: '{waitTime ?? "null"}'.",
                     paramName: nameof(waitTime));
 
-            int waitDurationDays;
-            bool success = int.TryParse(waitTime, out waitDurationDays);
+            double waitDurationDays;
+            bool success = Double.TryParse(waitTime, out waitDurationDays);
             
             if(!success) throw new FormatException(
                 $"The wait time string: '{waitTime}' is not numeric, hence could not be parsed.");
