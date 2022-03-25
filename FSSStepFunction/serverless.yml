@@ -3,10 +3,10 @@ provider:
   name: aws
   runtime: dotnetcore3.1
   timeout: 15
-  #vpc: ${self:custom.vpc.${opt:stage}}
-  #stage: ${opt:stage}
-  vpc: ${self:custom.vpc.development}
-  stage: development
+  vpc: ${self:custom.vpc.${opt:stage}}
+  stage: ${opt:stage}
+#  vpc: ${self:custom.vpc.development}
+#  stage: development
   region: eu-west-2
 
 package:
