@@ -2,119 +2,153 @@ service: fssstepfunction
 provider:
   name: aws
   runtime: dotnetcore3.1
-  timeout: 15
-  #vpc: ${self:custom.vpc.${opt:stage}}
-  #stage: ${opt:stage}
-  vpc: ${self:custom.vpc.development}
-  stage: development
+  timeout: 30
+  vpc: ${self:custom.vpc.${opt:stage}}
   region: eu-west-2
+  environment:
+    CONNECTION_STRING: Host=${ssm:/fss-public-api/${opt:stage}/postgres-hostname};Port=${ssm:/fss-public-api/${opt:stage}/postgres-port};Database=${ssm:/fss-public-api/${opt:stage}/postgres-database};Username=${ssm:/fss-public-api/${opt:stage}/postgres-username};Password=${ssm:/fss-public-api/${opt:stage}/postgres-password}
+    NOTIFY_KEY: ${ssm:/fss-portal-api/${opt:stage}/notify-key}
+    ACCESS_ID: ${ssm:/fss-portal-api/${opt:stage}/cognito-user}
+    ACCESS_KEY: ${ssm:/fss-portal-api/${opt:stage}/cognito-key}
+    REVERIFICATION_FIRST_EMAIL_TEMPLATE: ${ssm:/fss-common/${opt:stage}/reverification-first-email-template}
+    REVERIFICATION_SECOND_EMAIL_TEMPLATE: ${ssm:/fss-common/${opt:stage}/reverification-second-email-template}
+    REVERIFICATION_THIRD_EMAIL_TEMPLATE: ${ssm:/fss-common/${opt:stage}/reverification-third-email-template}
+    REVERIFICATION_PAUSE_EMAIL_TEMPLATE: ${ssm:/fss-common/${opt:stage}/reverification-pause-email-template}
+    WAIT_DURATION: ${ssm:/fss-step-function/${opt:stage}/wait-duration}
 
 package:
   # individually: true
   artifact: ./bin/release/netcoreapp3.1/fss-step-functions.zip
 
 functions:
-  fssFunctions:
-    handler: CsharpHandlers::AwsDotnetCsharp.Handler::FssFunctions
+  startFunction:
+    description: "The scheduler to check for FSS org reviews and trigger step functions.  Runs every 2 minutes"
+    handler: CsharpHandlers::LbhFssStepFunction.Handler::StartFunction
+    events:
+      - schedule:
+          rate: rate(2 minutes)
+    environment:
+      FSS_STEP_FUNCTION_ARN: ${self:resources.Outputs.FssStateMachine.Value}
+
+  firstStep:
+    handler: CsharpHandlers::LbhFssStepFunction.Handler::FirstStep
+  secondStep:
+    handler: CsharpHandlers::LbhFssStepFunction.Handler::SecondStep
+  thirdStep:
+    handler: CsharpHandlers::LbhFssStepFunction.Handler::ThirdStep
+  pauseStep:
+    handler: CsharpHandlers::LbhFssStepFunction.Handler::PauseStep
+    
 
 stepFunctions:
   stateMachines:
     fssstepfunc1:
-      events:
-        - http:
-            path: gofunction
-            method: GET
-        - schedule:
-            rate: rate(10 minutes)
-            enabled: true
-            input:
-              stageParams:
-                stage: ${self:provider.stage}
-      name: fssStateMachine-${self:provider.stage}
+      name: fssStateMachine
       definition:
-        Comment: "A test step function deployed via serverless"
-        StartAt: Send_email_1
+        Comment: "An FSS step function deployed via serverless"
+        StartAt: First_Step
         States:
-          Send_email_1:
+          First_Step:
             Type: Task
             Resource:
-              Fn::GetAtt: [fssFunctions, Arn]
-            Next: Wait_1st_month
-          Wait_1st_month:
+              Fn::GetAtt: [ firstStep, Arn ]
+            Retry:
+              - ErrorEquals:
+                  - States.All
+                IntervalSeconds: 30
+                MaxAttempts: 3
+                BackoffRate: 2
+            Next: Wait_1
+          Wait_1:
+            Type: Wait
+            TimestampPath: $.NextStepTime
+            Next: Choice_1
+          Choice_1:
+            Type: Choice
+            Choices:
+              - Variable: $.StateResult
+                BooleanEquals: true
+                Next: Second_Step
+              - Variable: $.StateResult
+                BooleanEquals: false
+                Next: End_Step
+          Second_Step:
             Type: Task
             Resource:
-              Fn::GetAtt: [fssFunctions, Arn]
-            Next: Check_org_1
-          Check_org_1:
+              Fn::GetAtt: [ secondStep, Arn ]
+            Retry:
+              - ErrorEquals:
+                  - States.All
+                IntervalSeconds: 30
+                MaxAttempts: 3
+                BackoffRate: 2
+            Next: Wait_2
+          Wait_2:
+            Type: Wait
+            TimestampPath: $.NextStepTime
+            Next: Choice_2
+          Choice_2:
+            Type: Choice
+            Choices:
+              - Variable: $.StateResult
+                BooleanEquals: true
+                Next: Third_Step
+              - Variable: $.StateResult
+                BooleanEquals: false
+                Next: End_Step
+          Third_Step:
             Type: Task
             Resource:
-              Fn::GetAtt: [ fssFunctions, Arn ]
-            Next: Has_org_been_reverified
-          Has_org_been_reverified:
+              Fn::GetAtt: [ thirdStep, Arn ]
+            Retry:
+              - ErrorEquals:
+                  - States.All
+                IntervalSeconds: 30
+                MaxAttempts: 3
+                BackoffRate: 2
+            Next: Wait_3
+          Wait_3:
+            Type: Wait
+            TimestampPath: $.NextStepTime
+            Next: Choice_3
+          Choice_3:
+            Type: Choice
+            Choices:
+              - Variable: $.StateResult
+                BooleanEquals: true
+                Next: Pause_Step
+              - Variable: $.StateResult
+                BooleanEquals: false
+                Next: End_Step
+          Pause_Step:
             Type: Task
             Resource:
-              Fn::GetAtt: [ fssFunctions, Arn ]
-            Next: Send_email_2
-          Send_email_2:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [fssFunctions, Arn]
-            Next: Wait_2nd_month
-          Wait_2nd_month:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [fssFunctions, Arn]
-            Next: Check_org_2
-          Check_org_2:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ fssFunctions, Arn ]
-            Next: Has_org_been_reverified2
-          Has_org_been_reverified2:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ fssFunctions, Arn ]
-            Next: Send_email_3
-          Send_email_3:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ fssFunctions, Arn ]
-            Next: Wait_3rd_month
-          Wait_3rd_month:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ fssFunctions, Arn ]
-            Next: Check_org_3
-          Check_org_3:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ fssFunctions, Arn ]
-            Next: Has_org_been_reverified3
-          Has_org_been_reverified3:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ fssFunctions, Arn ]
-            Next: Set_org_paused
-          Set_org_paused:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ fssFunctions, Arn ]
-            Next: Send_pause_email
-          Send_pause_email:
-            Type: Task
-            Resource:
-              Fn::GetAtt: [ fssFunctions, Arn ]
-            End: true
+              Fn::GetAtt: [ pauseStep, Arn ]
+            Retry:
+              - ErrorEquals:
+                  - States.All
+                IntervalSeconds: 30
+                MaxAttempts: 3
+                BackoffRate: 2
+            Next: End_Step
+          End_Step:
+            Type: Succeed
       dependsOn: lambdaExecutionRole
       tags:
         Team: HackIt
 
 resources:
+  Outputs:
+    FssStateMachine:
+      Description:  The ARN of the FSS state machine
+      Value:
+        Ref: FssStateMachine
+      
   Resources:
     lambdaExecutionRole:
       Type: AWS::IAM::Role
       Properties:
-        Path: /${self:service}/${self:provider.stage}/
+        Path: /${self:service}/${opt:stage}/
         RoleName: ${self:service}-lambdaExecutionRole
         AssumeRolePolicyDocument:
           Version: '2012-10-17'
