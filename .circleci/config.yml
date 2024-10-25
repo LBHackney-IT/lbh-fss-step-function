@@ -124,10 +124,17 @@ workflows:
         filters:
           branches:
             ignore: master
+      - permit-development-release:
+          type: approval
+          requires:
+            - build-and-test
+          filters:
+            branches:
+              only: develop
       - assume-role-development:
           context: api-assume-role-development-context
           requires:
-            - build-and-test
+            - permit-development-release
           filters:
             branches:
               only: develop
