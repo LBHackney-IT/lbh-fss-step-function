@@ -1,9 +1,8 @@
 version: 2.1
 
 orbs:
-  aws-ecr: circleci/aws-ecr@3.0.0
-  aws-cli: circleci/aws-cli@0.1.9
   aws_assume_role: lbh-hackit/aws_assume_role@0.1.0
+  node: circleci/node@6.3.0
 
 executors:
   docker-python:
@@ -44,11 +43,7 @@ commands:
       - *attach_workspace
       - checkout
       - setup_remote_docker
-      - run:
-          name: Install Node.js
-          command: |
-            curl -sL https://deb.nodesource.com/setup_13.x | bash -
-            apt-get update && apt-get install -y nodejs
+      - node/install
       - run:
           name: Install serverless CLI
           command: npm i -g serverless
@@ -126,14 +121,23 @@ workflows:
         filters:
           branches:
             ignore: master
-      - assume-role-development:
-          context: api-assume-role-development-context
+      - permit-development-release:
+          type: approval
           requires:
             - build-and-test
           filters:
             branches:
               only: develop
+      - assume-role-development:
+          context: api-assume-role-development-context
+          requires:
+            - permit-development-release
+          filters:
+            branches:
+              only: develop
       - deploy-to-development:
+          context:
+            - "Serverless Framework"
           requires:
             - assume-role-development
           filters:
@@ -145,14 +149,23 @@ workflows:
           filters:
             branches:
               only: master
-      - assume-role-staging:
-          context: api-assume-role-staging-context
+      - permit-staging-release:
+          type: approval
           requires:
             - build-and-test
           filters:
             branches:
               only: master
+      - assume-role-staging:
+          context: api-assume-role-staging-context
+          requires:
+            - permit-staging-release
+          filters:
+            branches:
+              only: master
       - deploy-to-staging:
+          context:
+            - "Serverless Framework"
           requires:
             - assume-role-staging
           filters:
@@ -173,6 +186,8 @@ workflows:
             branches:
               only: master
       - deploy-to-production:
+          context:
+            - "Serverless Framework"
           requires:
             - assume-role-production
           filters:
