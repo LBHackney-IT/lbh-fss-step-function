@@ -1,9 +1,8 @@
 version: 2.1
 
 orbs:
-  aws-ecr: circleci/aws-ecr@3.0.0
-  aws-cli: circleci/aws-cli@0.1.9
   aws_assume_role: lbh-hackit/aws_assume_role@0.1.0
+  node: circleci/node@6.3.0
 
 executors:
   docker-python:
@@ -44,49 +43,42 @@ commands:
       - *attach_workspace
       - checkout
       - setup_remote_docker
-      - run:
-          name: Install Node.js
-          command: |
-            curl -sL https://deb.nodesource.com/setup_13.x | bash -
-            apt-get update && apt-get install -y nodejs
+      - node/install
       - run:
           name: Install serverless CLI
           command: npm i -g serverless
       - run:
           name: Build lambda
           command: |
-            cd ./LbhFssStepFunction/
+            cd ./FSSStepFunction/
             chmod +x ./build.sh
             ./build.sh
       - run:
           name: Deploy lambda
           command: |
-            cd ./LbhFssStepFunction/
+            cd ./FSSStepFunction/
             sls plugin install --name serverless-step-functions
             sls deploy --stage <<parameters.stage>>
 
 jobs:
-  check-code-formatting:
-    executor: docker-dotnet
+  # check-code-formatting:
+  #   executor: docker-dotnet
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Install dotnet format
+  #         command: dotnet tool install dotnet-format --tool-path ./dotnet-format-local/
+  #     - run:
+  #         name: Run formatter check
+  #         command: ./dotnet-format-local/dotnet-format --dry-run
+  build-and-test:
+    executor: docker-python
     steps:
       - checkout
+      - setup_remote_docker
       - run:
-          name: Install dotnet format
-          command: dotnet tool install dotnet-format --tool-path ./dotnet-format-local/
-      - run:
-          name: Run formatter check
-          command: ./dotnet-format-local/dotnet-format --dry-run --check
-  #  build-and-test:
-  #    executor: docker-python
-  #    steps:
-  #      - checkout
-  #      - setup_remote_docker
-  #      - run:
-  #          name: build
-  #          command: docker-compose build lbh-fss-portal-api-test
-  #      - run:
-  #          name: Run tests
-  #          command: docker-compose run lbh-fss-portal-api-test
+          name: Run tests
+          command: make test-cci
   assume-role-development:
     executor: docker-python
     steps:
@@ -121,50 +113,61 @@ jobs:
 workflows:
   check-and-deploy-development:
     jobs:
-      - check-code-formatting:
+      # - check-code-formatting:
+      #   filters:
+      #     branches:
+      #       ignore: master
+      - build-and-test:
         filters:
           branches:
             ignore: master
-      #      - build-and-test:
-      #        filters:
-      #          branches:
-      #            ignore: master
-      - assume-role-development:
-          context: api-assume-role-development-context
-          #          requires:
-          #            - build-and-test
+      - permit-development-release:
+          type: approval
+          requires:
+            - build-and-test
           filters:
             branches:
-              ignore: master
+              only: develop
+      - assume-role-development:
+          context: api-assume-role-development-context
+          requires:
+            - permit-development-release
+          filters:
+            branches:
+              only: develop
       - deploy-to-development:
+          context:
+            - "Serverless Framework"
           requires:
             - assume-role-development
           filters:
             branches:
-              ignore: master
+              only: develop
   check-and-deploy-staging-and-production:
     jobs:
-      #      - build-and-test:
-      #          filters:
-      #            branches:
-      #              only: master
+      - build-and-test:
+          filters:
+            branches:
+              only: master
+      - permit-staging-release:
+          type: approval
+          requires:
+            - build-and-test
+          filters:
+            branches:
+              only: master
       - assume-role-staging:
           context: api-assume-role-staging-context
-          #          requires:
-          #            - build-and-test
+          requires:
+            - permit-staging-release
           filters:
             branches:
               only: master
       - deploy-to-staging:
+          context:
+            - "Serverless Framework"
           requires:
             - assume-role-staging
-          filters:
-            branches:
-              only: master
-      - assume-role-production:
-          context: api-assume-role-production-context
-          requires:
-            - deploy-to-staging
           filters:
             branches:
               only: master
@@ -175,9 +178,17 @@ workflows:
           filters:
             branches:
               only: master
-      - deploy-to-production:
+      - assume-role-production:
+          context: api-assume-role-production-context
           requires:
             - permit-production-release
+          filters:
+            branches:
+              only: master
+      - deploy-to-production:
+          context:
+            - "Serverless Framework"
+          requires:
             - assume-role-production
           filters:
             branches:
