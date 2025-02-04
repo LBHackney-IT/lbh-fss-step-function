@@ -54,11 +54,11 @@ commands:
             chmod +x ./build.sh
             ./build.sh
       - run:
-          name: Deploy lambda
+          name: Remove lambda
           command: |
             cd ./FSSStepFunction/
             sls plugin install --name serverless-step-functions
-            sls deploy --stage <<parameters.stage>>
+            sls remove --stage <<parameters.stage>>
 
 jobs:
   # check-code-formatting:
