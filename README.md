@@ -1,5 +1,6 @@
-# FSS organisation re-verification process
+This application and it's cloud recources has now been decommissioned
 
+<!--
 ## Description
 This repository contains code for a scheduled multi-step process of identifying **Find Support Services** organisations
 in-need of re-verification, notifying them about it, and pausing them should their details not be verified after a certain
@@ -87,3 +88,5 @@ still set to debug values, which is minutes rather than days.
 
 ## Ownership
 This along with the linked services and repositories is now owned by the [@LBHackney-IT/targeted-services](https://github.com/orgs/LBHackney-IT/teams/targeted-services) team.
+
+-->
